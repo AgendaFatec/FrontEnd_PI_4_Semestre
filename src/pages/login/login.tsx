@@ -14,7 +14,7 @@ const Login = () => {
     };
 
     return (
-        // Container principal: Ocupa a tela toda, fundo vermelho Fatec e centraliza o conteúdo
+        // Container principal: Ocupa a tela toda, fundo vermelho Fatec e centraliza o conteúdo a
         <div className="min-h-screen w-full bg-[#B20000] flex items-center justify-center p-6 overflow-hidden">
             
             {/* Wrapper responsivo: flex-col no mobile (empilhado) e flex-row no desktop (lado a lado) */}
