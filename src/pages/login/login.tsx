@@ -1,29 +1,75 @@
-import React from 'react';
-import logo from '../../assets/logo.svg';
+import logo from '../../assets/logo.svg'; 
 
 const Login = () => {
+    // (BACKEND): INTEGRAÇÃO COM AZURE / MICROSOFT
+    // Esta função é disparada quando o usuário clica em "Entrar com e-mail institucional".
+    // Aqui deve entrar a lógica do redirecionamento para a rota do backend que inicia o fluxo de autenticação da Microsoft
+    const handleInstitutionalLogin = async () => {
+        try {
+            console.log('Iniciando redirecionamento para login da Microsoft (Azure AD)...');
+            // window.location.href = 'https://api.salafacil.com/auth/microsoft';
+        } catch (error) {
+            console.error('Erro ao iniciar login institucional:', error);
+        }
+    };
+
     return (
-        <div className="h-screen w-full flex items-center justify-center bg-[#B20000]">
-            <div className="flex flex-row items-center gap-12">
-                {/* 1. Logo */}
-                <img src={logo} alt="Logo do SalaFácil" className="w-[450px]"/>
+        // Container principal: Ocupa a tela toda, fundo vermelho Fatec e centraliza o conteúdo a
+        <div className="min-h-screen w-full bg-[#B20000] flex items-center justify-center p-6 overflow-hidden">
+            
+            {/* Wrapper responsivo: flex-col no mobile (empilhado) e flex-row no desktop (lado a lado) */}
+            <div className="flex flex-col xl:flex-row items-center justify-center gap-12 xl:gap-[105px] w-full max-w-[1600px]">
+                
+                {/* 1. Lado Esquerdo (Logo) */}
+                <div className="flex justify-center xl:justify-end w-full xl:w-1/2">
+                    <img 
+                        src={logo} 
+                        alt="Logo do SalaFácil" 
+                        className="w-full max-w-[320px] md:max-w-[420px] xl:max-w-[521px] object-contain"
+                    />
+                </div>
 
-                {/* 2. Linha Divisória (vazia por dentro) */}
-                <div className="w-[2px] h-64 bg-white/30"></div>
+                {/* 2. Linhas Divisórias */}
+                {/* Desktop: Linha vertical */}
+                <div className="hidden xl:block w-[1px] h-[60vh] min-h-[400px] max-h-[876px] bg-white opacity-60"></div>
+                {/* Mobile: Linha horizontal */}
+                <div className="block xl:hidden w-full max-w-[300px] h-[1px] bg-white opacity-60"></div>
 
-                {/* 3. Lado Direito (Texto e Futuro Botão) */}
-                <div className="flex flex-col text-white">
-                    <h2 className="text-4xl font-serif">Bem vindo(a)</h2>
-                    <h2 className="text-4xl font-serif mb-6">ao SalaFácil!</h2>
+                {/* 3. Lado Direito (Texto e Botão) */}
+                <div className="flex flex-col items-center xl:items-start w-full xl:w-1/2">
                     
-                    {/* Aqui entrará o botão de login institucional */}
-                    <button className="bg-white text-[#B20000] px-6 py-2 font-bold rounded">
+                    {/* Títulos */}
+                    <div className="text-center xl:text-left text-white mb-10 xl:mb-[50px] font-['Roboto_Slab',serif]">
+                        <h2 className="text-3xl md:text-4xl xl:text-[48px] xl:leading-[63px] tracking-[-0.02em] font-normal">
+                            Bem vindo(a)
+                        </h2>
+                        <h2 className="text-3xl md:text-4xl xl:text-[48px] xl:leading-[63px] tracking-[-0.02em] font-normal">
+                            ao SalaFácil!
+                        </h2>
+                    </div>
+                    
+                {/* Botão Institucional */}
+                    <button 
+                        onClick={handleInstitutionalLogin}
+                        className="
+                            flex items-center justify-center 
+                            bg-white text-[#B20000] font-semibold font-['Inter',sans-serif] 
+                            text-sm md:text-lg xl:text-[27.66px] xl:leading-[33px] tracking-[-0.02em]
+                            whitespace-nowrap
+                            px-8 xl:w-[530px] 
+                            h-[48px] xl:h-[52.25px] 
+                            rounded-md shadow-lg
+                            transition-all duration-200 ease-in-out
+                            hover:scale-105 hover:bg-gray-100 active:scale-95
+                        "
+                    >
                         Entrar com e-mail institucional
                     </button>
+                    
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Login
+export default Login;
