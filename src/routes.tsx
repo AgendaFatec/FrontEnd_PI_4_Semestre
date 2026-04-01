@@ -7,6 +7,7 @@ import {
 } from "react-router-dom"
 
 import Login from "./pages/login/login";
+import ListarSalas from "./pages/docentes/listarSalas";
 
 function AppRoutes() {
     return (
@@ -14,6 +15,7 @@ function AppRoutes() {
             <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />}/>
+                <Route path="/listar-salas" element={<ListarSalas />}/>
             </Routes>
         </Router>
     )
