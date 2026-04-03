@@ -195,7 +195,7 @@ const styles = `
   }
 `;
 
-export default function ListaSalas() {
+export default function ListaSalasDocentes() {
   const [busca, setBusca] = useState('');
   
   // Estados para os Dropdowns Customizados
