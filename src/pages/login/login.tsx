@@ -1,13 +1,13 @@
 import logo from '../../assets/logo.svg'; 
 
 const Login = () => {
-    // (BACKEND): INTEGRAÇÃO COM AZURE / MICROSOFT
-    // Esta função é disparada quando o usuário clica em "Entrar com e-mail institucional".
-    // Aqui deve entrar a lógica do redirecionamento para a rota do backend que inicia o fluxo de autenticação da Microsoft
+
     const handleInstitutionalLogin = async () => {
         try {
-            console.log('Iniciando redirecionamento para login da Microsoft (Azure AD)...');
+            // console.log('Iniciando redirecionamento para login da Microsoft (Azure AD)...');
             // window.location.href = 'https://api.salafacil.com/auth/microsoft';
+
+            
         } catch (error) {
             console.error('Erro ao iniciar login institucional:', error);
         }
