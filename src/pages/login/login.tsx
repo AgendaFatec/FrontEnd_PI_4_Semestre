@@ -1,15 +1,31 @@
+import { useEffect } from 'react';
 import logo from '../../assets/logo.svg'; 
 
+import { api } from '../../services/api';
+
 const Login = () => {
+
+    useEffect(()=>{
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token")
+        if (token){
+            api.setToken(token)
+            window.history.replaceState({}, document.title, '/')
+            console.log(`Login bem sucedido, \ntokem: ${token}\n`)
+        }
+    },[])
+
+
 
     const handleInstitutionalLogin = async () => {
         try {
             // console.log('Iniciando redirecionamento para login da Microsoft (Azure AD)...');
             // window.location.href = 'https://api.salafacil.com/auth/microsoft';
-
+            const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+            window.location.href = `${backendUrl}/Auth/login`;
             
         } catch (error) {
-            console.error('Erro ao iniciar login institucional:', error);
+            console.log('Erro ao iniciar login institucional:', error);
         }
     };
 
