@@ -6,7 +6,7 @@ import salaSvg from '../assets/sala.svg';
 import reservaSvg from '../assets/reserva.svg';
 import chamadosTiSvg from '../assets/chamadosti.svg';
 import fatecSvg from '../assets/fatecitaquera.svg';
-import criacaoSvg from '../assets/criação.svg'; // Novo import
+import criacaoSvg from '../assets/criação.svg';
 
 const menusPorUsuario = {
   docente: [
@@ -18,7 +18,7 @@ const menusPorUsuario = {
   coordenador: [
     { nome: 'Reservas Solicitadas', path: '/reservas-solicitadas', icone: reservaSvg },
     { nome: 'Calendário de reservas', path: '/calendario-geral', icone: dataSvg },
-    { nome: 'Criação de Usuário', path: '/criar-usuario', icone: criacaoSvg }, // Ícone adicionado
+    { nome: 'Criação de Usuário', path: '/criar-usuario', icone: criacaoSvg },
     { nome: 'Frequência de Salas', path: '/frequencia', icone: salaSvg },
   ],
   tecnico: [
@@ -38,6 +38,14 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
   const location = useLocation();
   const navigate = useNavigate();
   const menuAtual = menusPorUsuario[tipoUsuario];
+
+  const handleLogout = () => {
+    /* PREPARAÇÃO PARA INTEGRAÇÃO:
+      localStorage.removeItem('token');
+      api.defaults.headers.common['Authorization'] = undefined;
+    */
+    navigate('/login');
+  };
 
   return (
     <div className={`
@@ -90,7 +98,9 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
 
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-            <span className="text-gray-600 font-bold">U</span>
+            <span className="text-gray-600 font-bold">
+              {usuarioEmail.charAt(0).toUpperCase()}
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-sm capitalize">{tipoUsuario}</span>
@@ -99,7 +109,7 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
         </div>
 
         <button 
-          onClick={() => navigate('/login')}
+          onClick={handleLogout}
           className="flex items-center gap-3 mt-2 text-white/90 hover:text-white transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
