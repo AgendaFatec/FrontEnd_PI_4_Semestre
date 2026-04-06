@@ -11,6 +11,7 @@ import ListaSalasDocentes from "./pages/docentes/listarSalas";
 import ListaSalasTecnico from "./pages/tecnico/listarSalas";
 
 
+
 function AppRoutes() {
     return (
         <Router>
