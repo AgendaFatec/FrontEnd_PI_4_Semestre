@@ -12,10 +12,16 @@ const Login = () => {
         const token = params.get("token");
         
         if (token) {
+            // 1. Salva o token nas configurações do Axios
             api.setToken(token);
 
-
+            // 2. Limpa a URL para o usuário não ver o token gigante
             window.history.replaceState({}, document.title, '/');
+            
+            // 3. TODO (Futuro): Decodificar o token aqui para descobrir quem é o usuário
+            // const userData = jwtDecode(token);
+            // setUserContext(userData);
+
             setLoginSuccess(true);
         }
     }, []);
@@ -34,7 +40,22 @@ const Login = () => {
         }
     };
     const handleEnterRoom = () => {
-        navigate('/baseJhon', { replace: true });
+        // MOCK: Simulação do tipo de usuário. 
+        // Altere entre 'professor', 'ti' e 'coordenador' para testar as telas.
+        const mockUserRole = 'ti'; 
+
+        // FUTURO: Quando o back estiver pronto, ele vai ler isso do Token ou de um Contexto global (ex: user.role)
+        // const mockUserRole = decodificarToken(token).role;
+
+        if (mockUserRole === 'ti') {
+            navigate('/listar-salas-tecnico', { replace: true }); // Rota da tela do Técnico
+        } else if (mockUserRole === 'professor') {
+            navigate('/listar-salas-docentes', { replace: true }); // Rota da tela do Professor
+        } else if (mockUserRole === 'coordenador') {
+            navigate('/calendario-coordenador', { replace: true }); // Rota da tela do Coordenador
+        } else {
+            navigate('/', { replace: true }); // Rota padrão de fallback
+        }
     };
 
     
