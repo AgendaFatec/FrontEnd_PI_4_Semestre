@@ -1,19 +1,27 @@
-import { useEffect } from 'react';
+import Raact, { useEffect,useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+
 import logo from '../../assets/logo.svg'; 
 
 import { api } from '../../services/api';
 
 const Login = () => {
+    const navigate = useNavigate()
 
-    useEffect(()=>{
+    const [loginSuccess, setLoginSuccess] = useState(false);
+    useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        const token = params.get("token")
-        if (token){
-            api.setToken(token)
-            window.history.replaceState({}, document.title, '/')
-            console.log(`Login bem sucedido, \ntokem: ${token}\n`)
+        const token = params.get("token");
+        
+        if (token) {
+            api.setToken(token);
+
+
+            window.history.replaceState({}, document.title, '/');
+            setLoginSuccess(true);
         }
-    },[])
+    }, []);
 
 
 
@@ -28,7 +36,11 @@ const Login = () => {
             console.log('Erro ao iniciar login institucional:', error);
         }
     };
+    const handleEnterRoom = () => {
+        navigate('/baseJhon', { replace: true });
+    };
 
+    
     return (
         // Container principal: Ocupa a tela toda, fundo vermelho Fatec e centraliza o conteúdo a
         <div className="min-h-screen w-full bg-[#B20000] flex items-center justify-center p-6 overflow-hidden">
@@ -55,14 +67,36 @@ const Login = () => {
                 <div className="flex flex-col items-center xl:items-start w-full xl:w-1/2">
                     
                     {/* Títulos */}
-                    <div className="text-center xl:text-left text-white mb-10 xl:mb-[50px] font-['Roboto_Slab',serif]">
-                        <h2 className="text-3xl md:text-4xl xl:text-[48px] xl:leading-[63px] tracking-[-0.02em] font-normal">
-                            Bem vindo(a)
-                        </h2>
-                        <h2 className="text-3xl md:text-4xl xl:text-[48px] xl:leading-[63px] tracking-[-0.02em] font-normal">
-                            ao SalaFácil!
-                        </h2>
-                    </div>
+                    {loginSuccess ? (
+                        <>
+                            <div className="text-center xl:text-left text-white mb-10 xl:mb-[50px] font-['Roboto_Slab',serif]">
+                                <h2 className="text-3xl md:text-4xl xl:text-[48px] xl:leading-[63px] tracking-[-0.02em] font-normal">
+                                    Login realizado!
+                                </h2>
+                                <p className="text-xl mt-4 opacity-90 text-white font-['Roboto_Slab',serif]">
+                                    Você já pode acessar o sistema.
+                                </p>
+                            </div>
+                            
+                            {/* ESTE É O CLIQUE QUE SALVA O ÁUDIO */}
+                            <button 
+                                onClick={handleEnterRoom}
+                                className="flex items-center justify-center bg-green-600 text-white font-semibold font-['Inter',sans-serif] text-sm md:text-lg xl:text-[27.66px] xl:leading-[33px] tracking-[-0.02em] whitespace-nowrap px-8 xl:w-[530px] h-[48px] xl:h-[52.25px] rounded-md shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-green-500 active:scale-95"
+                            >
+                                Iniciar SalaFácil
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            {/* Títulos originais */}
+                            <div className="text-center xl:text-left text-white mb-10 xl:mb-[50px] font-['Roboto_Slab',serif]">
+                                <h2 className="text-3xl md:text-4xl xl:text-[48px] xl:leading-[63px] tracking-[-0.02em] font-normal">
+                                    Bem vindo(a)
+                                </h2>
+                                <h2 className="text-3xl md:text-4xl xl:text-[48px] xl:leading-[63px] tracking-[-0.02em] font-normal">
+                                    ao SalaFácil!
+                                </h2>
+                            </div>
                     
                 {/* Botão Institucional */}
                     <button 
@@ -81,7 +115,8 @@ const Login = () => {
                     >
                         Entrar com e-mail institucional
                     </button>
-                    
+                    </>
+                    )}
                 </div>
             </div>
         </div>

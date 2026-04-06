@@ -9,7 +9,7 @@ import {
 import Login from "./pages/login/login";
 
 //apenas para teste:
-// import { StarAnimation } from "./pages/dashbords/testeDashBord";
+import { StarAnimation } from "./pages/dashbords/testeDashBord";
 
 
 function AppRoutes() {
@@ -18,7 +18,7 @@ function AppRoutes() {
             <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />}/>
-                {/* <Route path="/baseJhon" element={<StarAnimation />}/> */}
+                <Route path="/baseJhon" element={<StarAnimation />}/>
             </Routes>
         </Router>
     )

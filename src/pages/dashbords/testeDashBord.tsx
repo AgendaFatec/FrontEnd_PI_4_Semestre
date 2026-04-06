@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import starXD from "../../jhonPastaApagarDps/starXD.m4a"
-
+import starXD from "../../jhonPastaApagarDps/starXD.m4a";
 
 export const StarAnimation = () => {
   const [animate, setAnimate] = useState(false);
@@ -16,25 +15,34 @@ export const StarAnimation = () => {
     };
 
     window.addEventListener("click", enableAudio);
+    return () => window.removeEventListener("click", enableAudio);
   }, []);
 
+  // Efeito para controlar o ciclo da animação e da música (25 segundos)
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log("animate:", animate);
-      
+      // Remove a classe para resetar a animação
       setAnimate(false);
+      
+      // Dá um pequeno atraso para o DOM registrar a remoção antes de adicionar de novo
       setTimeout(() => {
         setAnimate(true);
 
+        // Reinicia a música
         if (audioRef.current) {
           audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(() => {});
+          audioRef.current.play().catch(() => console.log("Aguardando interação do usuário para tocar o áudio."));
         }
       }, 100);
-    }, 25000);
+    }, 25000); // 25 segundos
 
-    // inicia já na primeira vez
+    // Inicia já na primeira renderização
     setAnimate(true);
+
+    // Tenta tocar o áudio na primeira vez (pode falhar se o usuário não clicou na tela ainda)
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
 
     return () => clearInterval(interval);
   }, []);
@@ -61,16 +69,18 @@ export const StarAnimation = () => {
       {/* 🌍 Terra */}
       <div className="absolute bottom-0 w-full h-32 bg-green-700 rounded-t-[50%]" />
 
+      {/* ⭐ A Estrela Vermelha que cai e engole a tela */}
       <div
-        className={`fixed w-4 h-4 bg-red-500 rounded-full shadow-[0_0_20px_red] ${
+        className={`fixed w-4 h-4 bg-red-500 rounded-full shadow-[0_0_40px_10px_red] z-50 ${
           animate ? "animate-fall" : ""
         }`}
         style={{ top: 0, left: 0 }}
       />
 
+      {/* 🎵 Áudio */}
       <audio ref={audioRef}>
         <source src={starXD} type="audio/mp4" />
-        {/* <source src="/music.mp3" type="audio/mpeg" /> */}
+        Seu navegador não suporta a tag de áudio.
       </audio>
     </div>
   );

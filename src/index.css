@@ -1,1 +1,19 @@
 @import "tailwindcss";
+@theme {
+  --animate-fall: fall 25s ease-in forwards;
+
+  @keyframes fall {
+    0% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    70% {
+      transform: translate(50vw, 50vh) scale(5);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(50vw, 50vh) scale(200);
+      opacity: 1;
+    }
+  }
+}
