@@ -8,6 +8,14 @@ import iconX from '../../assets/x.svg';
 import iconData from '../../assets/data.svg';
 import iconHorario from '../../assets/horario.svg';
 import imgSala from '../../assets/sala.png';
+import imgSala2 from '../../assets/sala2.png';
+import imgSala3 from '../../assets/sala3.png';
+import imgSala4 from '../../assets/sala4.png';
+import imgSala5 from '../../assets/sala5.png';
+import imgSala6 from '../../assets/sala6.png';
+import imgSala7 from '../../assets/sala7.png';
+import imgSala8 from '../../assets/sala8.png';
+import imgSala9 from '../../assets/sala9.png';
 
 const mockSalas = [
   {
@@ -20,7 +28,8 @@ const mockSalas = [
       { nome: 'Televisão', qtd: 1 }
     ],
     tecnologias: ['Excel', 'MySQL', 'Node', 'Java', 'Python', 'Photoshop', 'Word', 'Visual Studio Code', 'Git'],
-    imagem: imgSala
+    imagem: imgSala,
+    fotos: [imgSala, imgSala4, imgSala5]
   },
   {
     id: 2,
@@ -31,7 +40,8 @@ const mockSalas = [
       { nome: 'Projetor', qtd: 1 }
     ],
     tecnologias: ['Excel', 'Word', 'PowerPoint'],
-    imagem: imgSala
+    imagem: imgSala2,
+    fotos: [imgSala2, imgSala6, imgSala7]
   },
   {
     id: 3,
@@ -42,7 +52,8 @@ const mockSalas = [
       { nome: 'Televisão', qtd: 2 }
     ],
     tecnologias: ['Android Studio', 'Java', 'Git'],
-    imagem: imgSala
+    imagem: imgSala3,
+    fotos: [imgSala3, imgSala8, imgSala9]
   }
 ];
 
@@ -82,7 +93,7 @@ const styles = `
   }
 
   /* Busca e Filtros */
-  .search-container { display: flex; margin: 2rem 0; max-width: 765px; height: 69px; } /* Editado: alinhado à esquerda */
+  .search-container { display: flex; margin: 2rem 0; max-width: 765px; height: 69px; } 
   .search-input {
     flex: 1; border: 1px solid #818181; border-right: none;
     border-radius: 34px 0 0 34px; padding: 0 24px; font-size: 18px; color: #333; outline: none;
@@ -91,7 +102,7 @@ const styles = `
     width: 97px; background: #FFFFFF; border: 1px solid #818181;
     border-radius: 0 34px 34px 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
-  .filters-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem; justify-content: flex-start; } /* Editado: flex-start */
+  .filters-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem; justify-content: flex-start; } 
   
   .filter-box {
     background: #FFFFFF; border: 1px solid #757575; border-radius: 8px;
@@ -135,7 +146,7 @@ const styles = `
 
   /* Modais (Pop-ups) */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-  .modal-content { background: #FFFFFF; border-radius: 20px; width: 100%; max-width: 654px; padding: 32px 40px; position: relative; display: flex; flex-direction: column; gap: 24px; }
+  .modal-content { background: #FFFFFF; border-radius: 20px; width: 100%; max-width: 654px; padding: 32px 40px; position: relative; display: flex; flex-direction: column; gap: 24px; max-height: 90vh; overflow-y: auto; }
   .btn-close { position: absolute; top: 24px; right: 24px; background: none; border: none; cursor: pointer; padding: 4px; }
   .modal-header-line { border-left: 3px solid #005C6D; padding-left: 12px; }
   .modal-title { font-family: 'Roboto Slab', serif; font-weight: 700; font-size: 36px; color: #005C6D; margin: 0; }
@@ -144,6 +155,14 @@ const styles = `
   .modal-footer { display: flex; gap: 16px; margin-top: 16px; }
   .btn-cancel { flex: 1; padding: 12px; background: #FFFFFF; border: 1px solid #D5D7D9; border-radius: 12px; font-weight: 500; color: #3B3D41; cursor: pointer; }
   .btn-confirm { flex: 1; padding: 12px; background: #B20000; border: none; border-radius: 12px; font-weight: 500; color: #FFFFFF; cursor: pointer; }
+
+  /* Galeria de Fotos */
+  .galeria-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .foto-destaque { width: 100%; height: 320px; object-fit: cover; border-radius: 12px; border: 2px solid #D5D7D9; }
+  .thumbnails-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+  .thumbnail-img { width: 100px; height: 75px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 3px solid transparent; opacity: 0.6; transition: 0.2s; }
+  .thumbnail-img:hover { opacity: 1; }
+  .thumbnail-img.ativa { border-color: #005C6D; opacity: 1; }
 
   /* Formulário de Reserva */
   .form-reserva { display: flex; flex-direction: column; gap: 20px; }
@@ -156,7 +175,6 @@ const styles = `
   .input-with-icon input, .input-with-icon select, .form-group textarea { width: 100%; border: 2px solid #D5D7D9; border-radius: 12px; padding: 10px 16px; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; color: #19191B; }
   .input-with-icon input { padding-left: 40px; }
   
-  /* Editado: Classe específica para empurrar o texto do select do horário */
   .input-with-icon select.has-icon-pad { padding-left: 40px; } 
 
   .input-with-icon select { appearance: none; background-image: url('../assets/seta.svg'); background-repeat: no-repeat; background-position: right 16px center; cursor: pointer; }
@@ -177,7 +195,6 @@ const styles = `
   .calendar-cell:hover { background: #F0F0F0; color: #B20000; font-weight: 700; }
   .calendar-cell.empty { visibility: hidden; pointer-events: none; }
   
-  /* Editado: Estilo para o dia de hoje */
   .calendar-cell.today { background-color: #B20000; color: #FFFFFF; font-weight: 700; }
   .calendar-cell.today:hover { background-color: #8E0000; color: #FFFFFF; }
 
@@ -198,33 +215,28 @@ const styles = `
 export default function ListaSalasDocentes() {
   const [busca, setBusca] = useState('');
   
-  // Estados para os Dropdowns Customizados
   const [ordenacao, setOrdenacao] = useState('');
   const [filtroOrdemAberto, setFiltroOrdemAberto] = useState(false);
   const [filtroMaquinaAberto, setFiltroMaquinaAberto] = useState(false);
   const [maquinasSelecionadas, setMaquinasSelecionadas] = useState<string[]>([]);
   
-  // Referências
   const ordemRef = useRef<HTMLDivElement>(null);
   const maquinaRef = useRef<HTMLDivElement>(null);
   const calendarioRef = useRef<HTMLDivElement>(null);
   
-  // Estados dos Modais (Pop-ups)
   const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
   const [modalReservaAberto, setModalReservaAberto] = useState(false);
   const [salaSelecionada, setSalaSelecionada] = useState<any>(null);
+  const [fotoAtual, setFotoAtual] = useState<string>(''); // Novo estado para galeria
 
-  // Estados do Formulário de Reserva
   const [dataReserva, setDataReserva] = useState('');
   const [horarioReserva, setHorarioReserva] = useState('');
   const [motivoReserva, setMotivoReserva] = useState('');
   const [mensagem, setMensagem] = useState<{ tipo: 'sucesso' | 'erro', texto: string } | null>(null);
 
-  // Estados do Calendário Customizado
   const [calendarioAberto, setCalendarioAberto] = useState(false);
   const [dataVisualizacao, setDataVisualizacao] = useState(new Date());
 
-  // Fecha dropdowns ao clicar fora
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (ordemRef.current && !ordemRef.current.contains(event.target as Node)) setFiltroOrdemAberto(false);
@@ -271,8 +283,18 @@ export default function ListaSalasDocentes() {
     return resultado;
   }, [busca, maquinasSelecionadas, ordenacao]);
 
-  const abrirDetalhes = (sala: any) => { setSalaSelecionada(sala); setModalDetalhesAberto(true); };
-  const abrirReserva = (sala: any, e?: React.MouseEvent) => { if (e) e.stopPropagation(); setSalaSelecionada(sala); setModalDetalhesAberto(false); setModalReservaAberto(true); };
+  const abrirDetalhes = (sala: any) => { 
+    setSalaSelecionada(sala); 
+    setFotoAtual(sala.fotos[0]);
+    setModalDetalhesAberto(true); 
+  };
+  
+  const abrirReserva = (sala: any, e?: React.MouseEvent) => { 
+    if (e) e.stopPropagation(); 
+    setSalaSelecionada(sala); 
+    setModalDetalhesAberto(false); 
+    setModalReservaAberto(true); 
+  };
   
   const fecharModais = () => { 
     setModalDetalhesAberto(false); 
@@ -293,7 +315,6 @@ export default function ListaSalasDocentes() {
     setTimeout(() => setMensagem(null), 4000);
   };
 
-  // Funções do Calendário Customizado
   const diasDoMes = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth() + 1, 0).getDate();
   const primeiroDiaDaSemana = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth(), 1).getDay();
   const diasArr = Array.from({length: diasDoMes}, (_, i) => i + 1);
@@ -433,7 +454,7 @@ export default function ListaSalasDocentes() {
           )}
         </div>
 
-        {/* POP-UP 1: Detalhes da Sala */}
+        {/* POP-UP 1: Detalhes da Sala com Galeria */}
         {modalDetalhesAberto && salaSelecionada && (
           <div className="modal-overlay" onClick={fecharModais}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -441,15 +462,36 @@ export default function ListaSalasDocentes() {
                 <img src={iconX} alt="Fechar" />
               </button>
               <div className="modal-header-line"><h2 className="modal-title">{salaSelecionada.nome}</h2></div>
+              
               <div className="modal-body">
+                {/* GALERIA DE FOTOS */}
+                <div className="galeria-container">
+                  <img src={fotoAtual} alt="Destaque da sala" className="foto-destaque" />
+                  {salaSelecionada.fotos.length > 1 && (
+                    <div className="thumbnails-row">
+                      {salaSelecionada.fotos.map((foto: string, index: number) => (
+                        <img 
+                          key={index} 
+                          src={foto} 
+                          alt={`Miniatura ${index + 1}`} 
+                          className={`thumbnail-img ${fotoAtual === foto ? 'ativa' : ''}`}
+                          onClick={() => setFotoAtual(foto)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <p className="modal-label">Capacidade da sala:</p>
-                <span className="pill-red modal-pill">{salaSelecionada.capacidade} alunos</span>
+                <span className="pill-red modal-pill" style={{width: 'fit-content', display: 'inline-block'}}>{salaSelecionada.capacidade} alunos</span>
+                
                 <p className="modal-label mt-4">Máquinas:</p>
                 <div className="pills-container">
                   {salaSelecionada.maquinas.map((maq: any, idx: number) => (
                     <span key={idx} className="pill-gray">{maq.nome}: {maq.qtd}</span>
                   ))}
                 </div>
+                
                 <p className="modal-label mt-4">Tecnologias:</p>
                 <div className="pills-container">
                   {salaSelecionada.tecnologias.map((tec: string, idx: number) => (
@@ -457,6 +499,7 @@ export default function ListaSalasDocentes() {
                   ))}
                 </div>
               </div>
+
               <div className="modal-footer">
                 <button className="btn-cancel" onClick={fecharModais}>Cancelar</button>
                 <button className="btn-confirm" onClick={() => abrirReserva(salaSelecionada)}>Reservar sala</button>
@@ -485,7 +528,6 @@ export default function ListaSalasDocentes() {
                 </div>
                 
                 <div className="form-row">
-                  {/* CAMPO DE DATA COM CALENDÁRIO */}
                   <div className="form-group half" ref={calendarioRef}>
                     <label>Data da reserva</label>
                     <div className="input-with-icon" onClick={() => setCalendarioAberto(!calendarioAberto)} style={{ cursor: 'pointer' }}>
@@ -534,7 +576,6 @@ export default function ListaSalasDocentes() {
                     </div>
                   </div>
 
-                  {/* CAMPO DE HORÁRIO COM SELECT */}
                   <div className="form-group half">
                     <label>Horário da reserva</label>
                     <div className="input-with-icon">
