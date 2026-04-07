@@ -31,7 +31,7 @@ interface SidebarProps {
   tipoUsuario: 'docente' | 'coordenador' | 'tecnico';
   usuarioEmail: string;
   onFechar: () => void;
-  isOpen: boolean; 
+  isOpen: boolean;
 }
 
 export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }: SidebarProps) {
@@ -40,82 +40,101 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
   const menuAtual = menusPorUsuario[tipoUsuario];
 
   const handleLogout = () => {
-    /* PREPARAÇÃO PARA INTEGRAÇÃO:
-      localStorage.removeItem('token');
-      api.defaults.headers.common['Authorization'] = undefined;
-    */
     navigate('/login');
   };
 
   return (
-    <div className={`
-      fixed inset-y-0 left-0 z-50 w-[280px] bg-[#B20000] text-white flex flex-col justify-between py-6 
-      transition-transform duration-300 ease-in-out
-      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-    `}>
-      
-      <button 
+    <div
+      className={`
+        fixed inset-y-0 left-0 z-50 w-[280px]
+        bg-[#B20000] text-white flex flex-col
+        py-6
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}
+    >
+      {/* Botão fechar */}
+      <button
         onClick={onFechar}
-        className="absolute top-4 right-4 p-2 hover:bg-black/10 rounded-full transition-colors"
+        className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition z-50"
       >
         <img src={xSvg} alt="Fechar menu" className="w-4 h-4" />
       </button>
 
-      <div className="flex flex-col px-6 mt-4">
-        <div className="flex justify-center mb-10">
+      {/* LOGO */}
+      <div className="flex flex-col">
+        {/* Reduzido o espaço vertical da logo para caber em telas menores */}
+        <div className="flex justify-center mb-8 px-6">
           <img src={logoSvg} alt="Logo Sala Fácil" className="w-32 h-auto" />
         </div>
 
-        <nav className="flex flex-col gap-2">
+        {/* MENU */}
+        <nav className="flex flex-col">
           {menuAtual.map((item) => {
             const isActive = location.pathname === item.path;
+
             return (
               <Link
                 key={item.nome}
                 to={item.path}
-                onClick={() => { if(window.innerWidth < 768) onFechar(); }} 
-                className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
-                  isActive ? 'bg-black/20 font-bold' : 'hover:bg-black/10 font-medium'
-                }`}
+                onClick={() => {
+                  if (window.innerWidth < 768) onFechar();
+                }}
+                /* py-3 ajuda a economizar espaço na altura total do menu */
+                className={`
+                  flex items-center gap-5 px-10 py-3
+                  transition-all
+                  ${isActive
+                    ? 'bg-black/20 border-r-[6px] border-white font-semibold'
+                    : 'hover:bg-white/10 font-medium'
+                  }
+                `}
               >
-                {item.icone ? (
-                  <img src={item.icone} alt={`Ícone ${item.nome}`} className="w-5 h-5" />
-                ) : (
-                  <div className="w-5 h-5 bg-white/20 rounded-sm"></div>
-                )}
-                {item.nome}
+                <img src={item.icone} alt="" className="w-5 h-5" />
+                <span className="text-[16px] tracking-wide">
+                  {item.nome}
+                </span>
               </Link>
             );
           })}
         </nav>
       </div>
 
-      <div className="px-6 flex flex-col gap-4">
-        <div className="w-full h-[1px] bg-white/30"></div>
+      {/* RODAPÉ - gap-3 e mt-auto garantem que fique no fundo, mas sem vazar da tela */}
+      <div className="px-10 flex flex-col gap-3 mt-auto">
+        <div className="w-full h-[1px] bg-white/20"></div>
+
         <div className="flex items-center mt-1">
-          <img src={fatecSvg} alt="Logo Fatec Itaquera" className="h-6 w-auto" />
+          <img src={fatecSvg} alt="Fatec Itaquera" className="h-6 w-auto" />
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-            <span className="text-gray-600 font-bold">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-[#D9D9D9] rounded-full flex items-center justify-center shrink-0">
+            <span className="text-[#333] font-bold">
               {usuarioEmail.charAt(0).toUpperCase()}
             </span>
           </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-sm capitalize">{tipoUsuario}</span>
-            <span className="text-xs text-white/80">{usuarioEmail}</span>
+
+          <div className="flex flex-col overflow-hidden">
+            <span className="font-bold text-sm capitalize truncate">
+              {tipoUsuario}
+            </span>
+            <span className="text-[11px] text-white/80 truncate">
+              {usuarioEmail}
+            </span>
           </div>
         </div>
 
-        <button 
+        <button
           onClick={handleLogout}
-          className="flex items-center gap-3 mt-2 text-white/90 hover:text-white transition-colors"
+          className="flex items-center gap-3 py-2 rounded-lg font-semibold hover:bg-white/10 transition w-fit"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
           </svg>
-          <span className="font-bold text-sm">Sair</span>
+
+          <span className="text-[15px]">Sair</span>
         </button>
       </div>
     </div>
