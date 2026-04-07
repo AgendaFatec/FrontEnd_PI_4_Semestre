@@ -1,0 +1,192 @@
+.lista-salas-container {
+  padding: 2rem 4rem;
+  background-color: #FAFAFA;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* HEADER */
+.header-salas {
+  margin-bottom: 2rem;
+}
+
+.title-salas {
+  font-family: 'Roboto Slab', serif;
+  font-weight: 700;
+  font-size: 64px;
+  color: #005C6D;
+  margin: 0;
+}
+
+.header-line {
+  margin-top: 10px;
+  height: 20px;
+  background: #B20000;
+  border-radius: 10px;
+  width: 355px;
+}
+
+/* FILTROS */
+.filters-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.filters-container button {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 2px solid #B20000;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.filters-container button:hover {
+  background: #B20000;
+  color: white;
+}
+
+.filters-container .active {
+  background: #B20000;
+  color: white;
+}
+
+/* GRID */
+.salas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+/* CARD */
+.sala-card {
+  background: white;
+  border: 3px solid #757575;
+  border-radius: 20px;
+  padding: 20px;
+  transition: 0.2s;
+}
+
+.sala-card:hover {
+  transform: translateY(-5px);
+}
+
+/* INFO */
+.sala-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.sala-nome-card {
+  font-family: 'Roboto Slab', serif;
+  font-size: 28px;
+  color: #005C6D;
+  margin-bottom: 10px;
+}
+
+/* TEXTO */
+.text-label {
+  font-weight: 600;
+  color: #757575;
+}
+
+/* PILLS */
+.pill-red {
+  background: #B20000;
+  color: white;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pill-gray {
+  background: #757575;
+  color: white;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pill-outline-red {
+  border: 2px solid #B20000;
+  color: #B20000;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* AÇÕES */
+.card-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+/* BOTÕES */
+.btn-confirm {
+  background: #B20000;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: white;
+  border: 1px solid #B20000;
+  color: #B20000;
+  padding: 8px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  width: 400px;
+}
+
+.modal-title {
+  font-family: 'Roboto Slab', serif;
+  font-size: 24px;
+  color: #005C6D;
+  margin-bottom: 10px;
+}
+
+.modal-footer {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+  .lista-salas-container {
+    padding: 1rem;
+  }
+
+  .title-salas {
+    font-size: 40px;
+  }
+
+  .salas-grid {
+    grid-template-columns: 1fr;
+  }
+}
