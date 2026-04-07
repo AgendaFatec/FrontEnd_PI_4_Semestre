@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import iconVerify from "@/assets/verify_FATEC.png";
+import { useState, useMemo } from "react";
+import iconVerify from "../../assets/verify_FATEC.png";
 
 type StatusReserva = "aprovado" | "pendente" | "rejeitado";
 
@@ -44,7 +44,7 @@ const styles = `
 
   .minhas-reservas-page {
     min-height: 100vh;
-    background: #f5f5f5;
+    background: #FAFAFA;
     padding: 34px 42px 60px;
     font-family: 'Inter', sans-serif;
     color: #3b3d41;
