@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "files": [],
   "references": [
@@ -5,3 +6,15 @@
     { "path": "./tsconfig.node.json" }
   ]
 }
+=======
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "verbatimModuleSyntax": false
+  }
+}
+>>>>>>> 1e409f06be5f65fd2f90d53147bcc980f17cde08
