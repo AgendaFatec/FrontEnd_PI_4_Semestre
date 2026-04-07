@@ -53,7 +53,6 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}
     >
-      {/* Botão fechar */}
       <button
         onClick={onFechar}
         className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition z-50"
@@ -61,14 +60,11 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
         <img src={xSvg} alt="Fechar menu" className="w-4 h-4" />
       </button>
 
-      {/* LOGO */}
       <div className="flex flex-col">
-        {/* Reduzido o espaço vertical da logo para caber em telas menores */}
         <div className="flex justify-center mb-8 px-6">
           <img src={logoSvg} alt="Logo Sala Fácil" className="w-32 h-auto" />
         </div>
 
-        {/* MENU */}
         <nav className="flex flex-col">
           {menuAtual.map((item) => {
             const isActive = location.pathname === item.path;
@@ -80,7 +76,6 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
                 onClick={() => {
                   if (window.innerWidth < 768) onFechar();
                 }}
-                /* py-3 ajuda a economizar espaço na altura total do menu */
                 className={`
                   flex items-center gap-5 px-10 py-3
                   transition-all
@@ -100,7 +95,6 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
         </nav>
       </div>
 
-      {/* RODAPÉ - gap-3 e mt-auto garantem que fique no fundo, mas sem vazar da tela */}
       <div className="px-10 flex flex-col gap-3 mt-auto">
         <div className="w-full h-[1px] bg-white/20"></div>
 
