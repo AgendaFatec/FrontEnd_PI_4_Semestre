@@ -14,7 +14,7 @@ export class ApiService{
             baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
             // baseURL: process.env.REACT_APP_BASE_URL || "http://localhost/3000",
             headers:{
-                "Content-Type":"aplication/json"
+                "Content-Type": "application/json"
             },
             withCredentials:true,
             timeout: 10000
