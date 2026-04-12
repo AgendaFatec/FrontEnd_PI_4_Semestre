@@ -23,6 +23,8 @@ const Login = () => {
         if (token) {
             api.setToken(token);
 
+            localStorage.setItem('token', token);
+
             window.history.replaceState({}, document.title, '/');
             
             try {

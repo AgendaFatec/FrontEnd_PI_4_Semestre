@@ -1,58 +1,42 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { jwtDecode } from 'jwt-decode';
 
 export default function LayoutBase() {
   const [sidebarAberta, setSidebarAberta] = useState(true);
   
-  // Estado que controla a Sidebar. Inicia como docente para testes.
-  const [perfilAtivo, setPerfilAtivo] = useState<'docente' | 'coordenador' | 'tecnico'>('docente');
-  const [emailLogado, setEmailLogado] = useState('professor@cps.sp.gov.br');
+const [perfilAtivo, setPerfilAtivo] = useState<'docente' | 'coordenador' | 'tecnico'>('docente');
+  const [emailLogado, setEmailLogado] = useState('');
+  const [nomeLogado, setNomeLogado] = useState(''); // <-- ESTADO DO NOME
 
-  /* ==========================================
-     PREPARAÇÃO PARA INTEGRAÇÃO COM BACK-END
-     Quando a API estiver pronta, descomente este bloco. 
-     Ele vai rodar sozinho e descobrir quem é o usuário.
-  =============================================
-    useEffect(() => {
-      const buscarDadosUsuario = async () => {
-        try {
-          // const response = await api.get('/auth/me');
-          // setPerfilAtivo(response.data.perfil); // Ex: 'coordenador'
-          // setEmailLogado(response.data.email);
-        } catch (error) {
-          console.error("Erro ao carregar perfil:", error);
-        }
-      };
-      buscarDadosUsuario();
-    }, []);
-  */
+  useEffect(() => {
+    const token = localStorage.getItem('token'); 
+    
+    if (token) {
+      try {
+        // Adicione o 'nome' ou 'name' aqui (dependendo de como seu backend envia)
+        const decoded = jwtDecode<{ role: string, email: string, name?: string, nome?: string }>(token);
+        
+        const mapRoles: Record<string, 'docente' | 'coordenador' | 'tecnico'> = {
+          'DOCENTE': 'docente',
+          'ADM': 'coordenador',
+          'TI': 'tecnico'
+        };
+        
+        setPerfilAtivo(mapRoles[decoded.role] || 'docente');
+        setEmailLogado(decoded.email || '');
+        
+        // Se o token enviar name ou nome, ele pega, senão coloca um padrão
+        setNomeLogado(decoded.name || decoded.nome || 'Usuário');
+      } catch (error) {
+        console.error("Erro ao decodificar token no Layout:", error);
+      }
+    }
+  }, []);
 
   return (
     <div className="flex h-screen w-full bg-[#FAFAFA] overflow-hidden relative text-gray-900">
-      
-      {/* Botões de atalho para troca de perfil (Visíveis apenas em desenvolvimento) */}
-      <div className="fixed top-2 right-2 z-[60] flex gap-2 opacity-30 hover:opacity-100 transition-opacity p-2 bg-white/80 rounded-lg shadow-sm border border-gray-200">
-        <span className="text-[10px] font-bold text-gray-500 self-center mr-1 uppercase">Dev Switch:</span>
-        <button 
-          onClick={() => setPerfilAtivo('docente')} 
-          className={`px-2 py-1 text-xs rounded font-bold transition-colors ${perfilAtivo === 'docente' ? 'bg-[#B20000] text-white' : 'bg-gray-200 text-gray-700'}`}
-        >
-          Docente
-        </button>
-        <button 
-          onClick={() => setPerfilAtivo('coordenador')} 
-          className={`px-2 py-1 text-xs rounded font-bold transition-colors ${perfilAtivo === 'coordenador' ? 'bg-[#B20000] text-white' : 'bg-gray-200 text-gray-700'}`}
-        >
-          Coord
-        </button>
-        <button 
-          onClick={() => setPerfilAtivo('tecnico')} 
-          className={`px-2 py-1 text-xs rounded font-bold transition-colors ${perfilAtivo === 'tecnico' ? 'bg-[#B20000] text-white' : 'bg-gray-200 text-gray-700'}`}
-        >
-          Técnico
-        </button>
-      </div>
 
       {sidebarAberta && (
         <div 
@@ -63,6 +47,7 @@ export default function LayoutBase() {
 
       <Sidebar 
         tipoUsuario={perfilAtivo} 
+        nomeUsuario={nomeLogado} // <-- ADICIONE ISSO
         usuarioEmail={emailLogado} 
         onFechar={() => setSidebarAberta(false)} 
         isOpen={sidebarAberta}

@@ -1,12 +1,13 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logoSvg from '../assets/logo.svg';
-import xSvg from '../assets/x.svg';
-import dataSvg from '../assets/data.svg';
-import salaSvg from '../assets/sala.svg';
+import xSvg from '../assets/xBranco.svg';
+import dataSvg from '../assets/calendario.svg';
+import salaSvg from '../assets/salaBranco.svg';
 import reservaSvg from '../assets/reserva.svg';
 import chamadosTiSvg from '../assets/chamadosti.svg';
 import fatecSvg from '../assets/fatecitaquera.svg';
 import criacaoSvg from '../assets/criação.svg';
+import usuarioSvg from '../assets/usuario.svg';
 
 const menusPorUsuario = {
   docente: [
@@ -29,12 +30,13 @@ const menusPorUsuario = {
 
 interface SidebarProps {
   tipoUsuario: 'docente' | 'coordenador' | 'tecnico';
+  nomeUsuario: string;
   usuarioEmail: string;
   onFechar: () => void;
   isOpen: boolean;
 }
 
-export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }: SidebarProps) {
+export default function Sidebar({ tipoUsuario, nomeUsuario, usuarioEmail, onFechar, isOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const menuAtual = menusPorUsuario[tipoUsuario];
@@ -102,21 +104,21 @@ export default function Sidebar({ tipoUsuario, usuarioEmail, onFechar, isOpen }:
           <img src={fatecSvg} alt="Fatec Itaquera" className="h-6 w-auto" />
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-[#D9D9D9] rounded-full flex items-center justify-center shrink-0">
-            <span className="text-[#333] font-bold">
-              {usuarioEmail.charAt(0).toUpperCase()}
-            </span>
-          </div>
+<div className="flex items-center gap-4">
+          
+          {/* FOTO ATUALIZADA */}
+          <img src={usuarioSvg} alt="Foto do usuário" className="w-10 h-10 shrink-0" />
 
+          {/* NOME E EMAIL ATUALIZADOS */}
           <div className="flex flex-col overflow-hidden">
             <span className="font-bold text-sm capitalize truncate">
-              {tipoUsuario}
+              {nomeUsuario}
             </span>
             <span className="text-[11px] text-white/80 truncate">
               {usuarioEmail}
             </span>
           </div>
+          
         </div>
 
         <button
