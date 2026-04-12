@@ -1,4 +1,6 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate} from 'react-router-dom';
+import { useEffect,useState } from 'react';
+
 import logoSvg from '../assets/logo.svg';
 import xSvg from '../assets/xBranco.svg';
 import dataSvg from '../assets/calendario.svg';
@@ -8,6 +10,8 @@ import chamadosTiSvg from '../assets/chamadosti.svg';
 import fatecSvg from '../assets/fatecitaquera.svg';
 import criacaoSvg from '../assets/criação.svg';
 import usuarioSvg from '../assets/usuario.svg';
+import { api } from '../services/api';
+
 
 const menusPorUsuario = {
   docente: [
@@ -43,9 +47,40 @@ export default function Sidebar({ tipoUsuario, nomeUsuario, usuarioEmail, userId
   const menuAtual = menusPorUsuario[tipoUsuario];
 
 
-  const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-  const urlFoto = `${backendUrl}/Usuarios/foto/${userId}`;
+  // const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  // const urlFoto = `${backendUrl}/Usuarios/foto/${userId}`;
 
+
+  const [fotoUrl, setFotoUrl] = useState<string>(usuarioSvg);
+  useEffect(() => {
+    const carregarFoto = async () => {
+      if (!userId) return;
+      try {
+        const response:any = await api.get(`/Usuarios/foto/${userId}`, {
+          responseType: 'blob', 
+        });
+
+        if (response instanceof Blob) {
+          const urlGerada = URL.createObjectURL(response);
+          setFotoUrl(urlGerada);   
+        } else {
+          console.warn("Resposta não é um Blob:", response);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar foto protegida:", error);
+        setFotoUrl(usuarioSvg); 
+      }
+    };
+
+    carregarFoto();
+
+    // Cleanup: Limpa a memória ao desmontar o componente ou mudar o ID
+    return () => {
+    if (fotoUrl && fotoUrl.startsWith('blob:')) {
+       URL.revokeObjectURL(fotoUrl);
+    }
+    };
+  }, [userId]);
 
   const handleLogout = () => {
     navigate('/login');
@@ -112,7 +147,7 @@ export default function Sidebar({ tipoUsuario, nomeUsuario, usuarioEmail, userId
 
       <div className="flex items-center gap-4">
           {/* FOTO ATUALIZADA */}
-          <img src={urlFoto} 
+          <img src={fotoUrl} 
           alt="Foto do usuário" 
           // className="w-10 h-10 shrink-0" 
           className="w-10 h-10 shrink-0 rounded-full object-cover border border-white/50"
