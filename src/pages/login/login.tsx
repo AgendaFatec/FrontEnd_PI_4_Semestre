@@ -9,6 +9,8 @@ interface DecodedToken {
     email: string;
     role: 'DOCENTE' | 'TI' | 'ADM';
     status: string;
+    userName?:string;
+    // fotoUrl?:string;
 }
 
 const Login = () => {

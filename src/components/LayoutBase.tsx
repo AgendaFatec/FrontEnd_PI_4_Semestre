@@ -6,18 +6,22 @@ import { jwtDecode } from 'jwt-decode';
 export default function LayoutBase() {
   const [sidebarAberta, setSidebarAberta] = useState(true);
   
-const [perfilAtivo, setPerfilAtivo] = useState<'docente' | 'coordenador' | 'tecnico'>('docente');
+  const [perfilAtivo, setPerfilAtivo] = useState<'docente' | 'coordenador' | 'tecnico'>('docente');
   const [emailLogado, setEmailLogado] = useState('');
-  const [nomeLogado, setNomeLogado] = useState(''); // <-- ESTADO DO NOME
+  const [nomeLogado, setNomeLogado] = useState('');
+  const [idLogado, setIdLogado] = useState<number>(0); 
+
 
   useEffect(() => {
     const token = localStorage.getItem('token'); 
     
     if (token) {
       try {
-        // Adicione o 'nome' ou 'name' aqui (dependendo de como seu backend envia)
-        const decoded = jwtDecode<{ role: string, email: string, name?: string, nome?: string }>(token);
+        const decoded = jwtDecode<{ sub:number, role: string, email: string, name?: string, userName?: string }>(token);
         
+        // console.log(`\n\n\n${decoded.name}\n${decoded.email}`)
+        // console.log(`\n\n${decoded.role}`)
+
         const mapRoles: Record<string, 'docente' | 'coordenador' | 'tecnico'> = {
           'DOCENTE': 'docente',
           'ADM': 'coordenador',
@@ -26,9 +30,9 @@ const [perfilAtivo, setPerfilAtivo] = useState<'docente' | 'coordenador' | 'tecn
         
         setPerfilAtivo(mapRoles[decoded.role] || 'docente');
         setEmailLogado(decoded.email || '');
-        
+        setIdLogado(decoded.sub);
         // Se o token enviar name ou nome, ele pega, senão coloca um padrão
-        setNomeLogado(decoded.name || decoded.nome || 'Usuário');
+        setNomeLogado(decoded.name || decoded.userName || 'Usuário');
       } catch (error) {
         console.error("Erro ao decodificar token no Layout:", error);
       }
@@ -46,6 +50,7 @@ const [perfilAtivo, setPerfilAtivo] = useState<'docente' | 'coordenador' | 'tecn
       )}
 
       <Sidebar 
+        userId = {idLogado}
         tipoUsuario={perfilAtivo} 
         nomeUsuario={nomeLogado} // <-- ADICIONE ISSO
         usuarioEmail={emailLogado} 

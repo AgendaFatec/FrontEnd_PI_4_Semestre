@@ -32,14 +32,20 @@ interface SidebarProps {
   tipoUsuario: 'docente' | 'coordenador' | 'tecnico';
   nomeUsuario: string;
   usuarioEmail: string;
+  userId: number;
   onFechar: () => void;
   isOpen: boolean;
 }
 
-export default function Sidebar({ tipoUsuario, nomeUsuario, usuarioEmail, onFechar, isOpen }: SidebarProps) {
+export default function Sidebar({ tipoUsuario, nomeUsuario, usuarioEmail, userId,onFechar, isOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const menuAtual = menusPorUsuario[tipoUsuario];
+
+
+  const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const urlFoto = `${backendUrl}/Usuarios/foto/${userId}`;
+
 
   const handleLogout = () => {
     navigate('/login');
@@ -104,10 +110,16 @@ export default function Sidebar({ tipoUsuario, nomeUsuario, usuarioEmail, onFech
           <img src={fatecSvg} alt="Fatec Itaquera" className="h-6 w-auto" />
         </div>
 
-<div className="flex items-center gap-4">
-          
+      <div className="flex items-center gap-4">
           {/* FOTO ATUALIZADA */}
-          <img src={usuarioSvg} alt="Foto do usuário" className="w-10 h-10 shrink-0" />
+          <img src={urlFoto} 
+          alt="Foto do usuário" 
+          // className="w-10 h-10 shrink-0" 
+          className="w-10 h-10 shrink-0 rounded-full object-cover border border-white/50"
+          onError={(e) => {
+                e.currentTarget.src = usuarioSvg;
+              }}
+          />
 
           {/* NOME E EMAIL ATUALIZADOS */}
           <div className="flex flex-col overflow-hidden">
