@@ -11,6 +11,8 @@ import ListaSalasTecnico from "./pages/tecnico/listarSalas";
 import MinhasReservas from "./pages/docentes/reservaDocente";
 import DashboardAdm from "./pages/adm/dashboardAdm";
 import LayoutBase from "./components/LayoutBase";
+import CriarUsuario from "./pages/adm/criarUsuarios";
+
 
 function AppRoutes() {
     return (
@@ -24,6 +26,7 @@ function AppRoutes() {
                     <Route path="/listar-salas-tecnico" element={<ListaSalasTecnico />}/>
                     <Route path="/minhas-reservas" element={<MinhasReservas />}/>
                     <Route path="/dashboard-adm" element={<DashboardAdm />}/>
+                    <Route path="/criar-usuario" element={<CriarUsuario />}/>
                 </Route>
             </Routes>
         </Router>
