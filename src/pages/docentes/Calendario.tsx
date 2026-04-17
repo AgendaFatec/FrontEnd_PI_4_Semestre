@@ -25,8 +25,8 @@ const salas = ["Sala 30", "Sala 31", "Sala 32", "Sala 33", "Sala 34"];
 const reservasMock: Reserva[] = [
   {
     id: 1,
-    titulo: "Aula 02",
-    professor: "Professor VIT",
+    titulo: "Sala 30",
+    professor: "Professor Fretz",
     sala: "Sala 30",
     data: "2026-02-05",
     inicio: "14:50",
@@ -35,32 +35,22 @@ const reservasMock: Reserva[] = [
   },
   {
     id: 2,
-    titulo: "Professora Elaine",
-    professor: "Professora Elaine",
-    sala: "Sala 31",
+    titulo: "Sala 02",
+    professor: "Professor VIT",
+    sala: "Sala 02",
     data: "2026-02-05",
-    inicio: "14:50",
-    fim: "16:30",
+    inicio: "09:20",
+    fim: "11:00",
     status: "reservado",
   },
   {
     id: 3,
-    titulo: "Aula 02",
+    titulo: "Sala 02",
     professor: "Professor VIT",
-    sala: "Sala 30",
+    sala: "Sala 02",
     data: "2026-02-05",
-    inicio: "09:20",
-    fim: "11:00",
-    status: "reservado",
-  },
-  {
-    id: 4,
-    titulo: "Professora Elaine",
-    professor: "Professora Elaine",
-    sala: "Sala 31",
-    data: "2026-02-05",
-    inicio: "09:20",
-    fim: "11:00",
+    inicio: "14:50",
+    fim: "16:30",
     status: "reservado",
   },
 ];
@@ -107,7 +97,7 @@ const styles = `
     box-sizing: border-box;
   }
 
-.calendario-page {
+  .calendario-page {
   min-height: 100vh;
   background: #f6f6f6;
   padding: 44px 62px 34px;
@@ -115,7 +105,7 @@ const styles = `
   color: #333;
 }
 
-.calendario-header {
+  .calendario-header {
   margin-bottom: 26px;
 }
 
@@ -162,19 +152,19 @@ const styles = `
     border-radius: 999px;
   }
 
- .calendario-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
+  .calendario-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
 
   .calendario-toolbar-esquerda {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
@@ -188,16 +178,17 @@ const styles = `
   .btn-hoje,
   .btn-nav-data,
   .btn-modo,
-  .btn-filtro,
-  .dropdown-item,
-  .botao-slot-reserva {
+  .filtro-select,
+  .slot-add-dia,
+  .slot-add-semana,
+  .btn-lista-footer {
     font-family: inherit;
   }
 
   .btn-hoje {
-    height: 30px;
-    padding: 0 12px;
-    border: 1px solid #d8d8d8;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid #d5d5d5;
     border-radius: 4px;
     background: #ffffff;
     color: #2f2f2f;
@@ -207,14 +198,15 @@ const styles = `
   }
 
   .btn-nav-data {
-    width: 26px;
-    height: 26px;
-    border: 1px solid #d8d8d8;
-    border-radius: 3px;
-    background: #ffffff;
-    color: #4e4e4e;
-    font-size: 12px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1;
     cursor: pointer;
+    padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -224,18 +216,19 @@ const styles = `
     margin-left: 8px;
     font-size: 12px;
     font-weight: 700;
-    color: #232323;
+    color: #1f2937;
   }
 
   .btn-modo {
-    min-width: 40px;
-    height: 28px;
-    padding: 0 12px;
-    border: 1px solid #dbdbdb;
+    min-width: 44px;
+    height: 24px;
+    padding: 0 10px;
+    border: 1px solid #d8d8d8;
     border-radius: 4px;
     background: #ffffff;
-    color: #585858;
+    color: #4b5563;
     font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
   }
 
@@ -243,308 +236,383 @@ const styles = `
     background: #c40000;
     color: #ffffff;
     border-color: #c40000;
+  }
+
+  .calendario-subtoolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .filtro-bloco {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .filtro-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #4b5563;
     font-weight: 700;
   }
 
-.calendario-subtoolbar {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-  .filtro-wrapper {
-    position: relative;
-  }
-
-  .btn-filtro {
-    height: 28px;
-    padding: 0 10px;
-    border: 1px solid #dddddd;
-    border-radius: 4px;
-    background: #ffffff;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    cursor: pointer;
-    color: #4a4a4a;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .btn-filtro img {
-    width: 11px;
-    height: 11px;
+  .filtro-label img {
+    width: 16px;
+    height: 16px;
     object-fit: contain;
   }
 
-  .dropdown-filtro {
-    position: absolute;
-    top: 34px;
-    left: 0;
-    width: 180px;
-    background: #ffffff;
-    border: 1px solid #e2e2e2;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.08);
-    z-index: 50;
+  .filtro-select-wrap {
+    position: relative;
+    width: 205px;
   }
 
-  .dropdown-item {
-    display: block;
+  .filtro-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
     width: 100%;
-    border: none;
-    border-bottom: 1px solid #f0f0f0;
-    background: #ffffff;
-    text-align: left;
-    padding: 10px 12px;
-    font-size: 12px;
-    color: #3a3a3a;
+    height: 40px;
+    border: 1.5px solid #cfd4dc;
+    border-radius: 10px;
+    background: #f8f8f8;
+    padding: 0 38px 0 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2f2f2f;
     cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
 
-  .dropdown-item:last-child {
-    border-bottom: none;
+  .filtro-select:hover {
+    background: #fbfbfb;
+    border-color: #bcc3cd;
   }
 
-  .dropdown-item:hover {
-    background: #faf3f3;
+  .filtro-select:focus {
+    background: #ffffff;
+    border-color: #aeb7c3;
+    box-shadow: 0 0 0 3px rgba(180, 185, 195, 0.18);
+  }
+
+  .filtro-select-icone {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    object-fit: contain;
+    pointer-events: none;
+    opacity: 0.8;
   }
 
   .calendario-instrucao {
-    font-size: 12px;
-    color: #666666;
-    font-weight: 600;
+    text-align: center;
+    font-size: 11px;
+    color: #374151;
+    font-weight: 700;
+    margin: 12px 0 14px;
   }
 
   .calendario-content {
-    background: #ffffff;
+    background: #f1f1f1;
+    border: 1px solid #ebebeb;
     border-radius: 0;
+    padding: 12px;
   }
 
-  .calendario-grade-dia {
-    display: grid;
-    grid-template-columns: 58px 1fr;
-    border: 1px solid #dfdfdf;
+  /* DIA */
+  .dia-wrapper {
+    background: transparent;
+  }
+
+  .dia-agenda {
+    display: flex;
+    border: 1px solid #d4d4d4;
+    border-radius: 6px;
+    overflow: hidden;
     background: #ffffff;
   }
 
-  .calendario-coluna-horarios {
-    background: #f3e2e2;
-    border-right: 1px solid #dfdfdf;
+  .dia-coluna-horarios {
+    width: 82px;
+    min-width: 82px;
+    background: #f1dede;
+    border-right: 1px solid #d4d4d4;
+    flex-shrink: 0;
   }
 
-  .calendario-hora-slot {
-    min-height: 58px;
-    border-bottom: 1px solid #dfdfdf;
+  .dia-horario {
+    height: 66px;
+    border-bottom: 1px solid #d4d4d4;
+    padding: 10px 8px 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #243244;
+    line-height: 1.18;
+    white-space: pre-line;
+    overflow: hidden;
+  }
+
+  .dia-horario:last-child {
+    border-bottom: none;
+  }
+
+  .dia-grade {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    background: #ffffff;
+  }
+
+  .dia-linha {
+    min-height: 66px;
+    border-bottom: 1px solid #d4d4d4;
+    display: flex;
+    align-items: stretch;
     justify-content: flex-start;
-    gap: 1px;
-    padding: 8px 4px 0 6px;
+    position: relative;
+    padding: 0;
+    background: #ffffff;
+  }
+
+  .dia-linha:last-child {
+    border-bottom: none;
+  }
+
+  .dia-linha-conteudo {
+    width: 100%;
+    min-height: 66px;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 12px;
+  }
+
+  .mini-box-reserva {
+    width: 96px;
+    min-height: 44px;
+    background: #fdeeee;
+    border: 1px solid #ef6b6b;
+    border-radius: 2px;
+    padding: 6px 6px 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  .mini-box-titulo {
     font-size: 10px;
+    line-height: 1.05;
+    font-weight: 700;
+    color: #d00000;
+    margin-bottom: 4px;
+  }
+
+  .mini-box-professor {
+    font-size: 8px;
     line-height: 1.08;
     font-weight: 700;
-    color: #3d3d3d;
-    white-space: pre-line;
+    color: #262626;
   }
 
-  .calendario-coluna-dia {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .calendario-topo-dia {
-    height: 34px;
-    border-bottom: 1px solid #dfdfdf;
-    background: #fbfbfb;
-  }
-
-  .calendario-linha-dia {
-    min-height: 58px;
-    border-bottom: 1px solid #dfdfdf;
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 6px 8px;
-    background: #ffffff;
-  }
-
-  .compacto-dia {
-    grid-template-columns: 58px 1fr !important;
-  }
-
-  .horario-topo-vazio {
-    background: #f8f8f8 !important;
-    border-bottom: 1px solid #dfdfdf !important;
-    height: 34px !important;
-  }
-
-  .hora-slot-dia {
-    min-height: 58px !important;
-    padding: 8px 4px 0 6px !important;
-    font-size: 10px !important;
-    line-height: 1.08 !important;
-    font-weight: 700 !important;
-    color: #3d3d3d !important;
-    background: #f3e2e2 !important;
-    border-bottom: 1px solid #dfdfdf !important;
-    justify-content: flex-start !important;
-    align-items: flex-start !important;
-  }
-
-  .linha-dia-compacta {
-    min-height: 58px !important;
-    padding: 6px 8px !important;
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    border-bottom: 1px solid #dfdfdf !important;
-    background: #fff !important;
-  }
-
-  .grupo-reservas-dia {
-    display: flex !important;
-    gap: 6px !important;
-    align-items: flex-start !important;
-  }
-
-  .bloco-reserva {
-    width: 66px;
-    min-width: 66px;
-    max-width: 66px;
-    min-height: 62px;
-    background: #f3dddd;
-    border: 1px solid #df9c9c;
-    border-radius: 0;
-    padding: 7px 6px 4px;
-    position: relative;
-  }
-
-  .bloco-reserva-dia {
-    width: 66px;
-    min-width: 66px;
-    max-width: 66px;
-  }
-
-  .bloco-dia-esboco {
-    width: 66px !important;
-    min-width: 66px !important;
-    max-width: 66px !important;
-    min-height: 62px !important;
-    padding: 7px 6px 4px !important;
-    background: #f3dddd !important;
-    border: 1px solid #df9c9c !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .bloco-reserva-bolinha {
-    display: none;
-  }
-
-  .bloco-reserva-titulo {
-    font-size: 10px;
-    font-weight: 700;
-    color: #df0000;
-    line-height: 1.05;
-    margin-bottom: 6px;
-  }
-
-  .bloco-reserva-professor {
-    font-size: 9px;
-    color: #202020;
-    line-height: 1.05;
-    font-weight: 700;
-  }
-
-  .slot-vazio-dia {
-    width: 100%;
-    height: 100%;
-  }
-
-  .botao-slot-reserva {
-    border: 1px solid #df9f9f;
-    background: #f7e8e8;
+  .slot-add-dia {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    border: 1px solid #ef6b6b;
+    background: #fdeeee;
     color: #c40000;
-    border-radius: 0;
-    padding: 5px 8px;
     font-size: 10px;
     font-weight: 700;
     cursor: pointer;
+    transition: opacity 0.15s ease;
   }
 
-  .faixa-solicitar {
-    width: 100% !important;
-    min-height: 28px !important;
-    margin-top: 10px !important;
-    background: #f7e3e3 !important;
-    border: 1px solid #dfa3a3 !important;
-    color: #b30000 !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    border-radius: 0 !important;
-    text-align: center !important;
-    padding: 6px 8px !important;
+  .dia-linha:hover .slot-add-dia {
+    opacity: 1;
+  }
+
+  .dia-linha.tem-reserva:hover .slot-add-dia {
+    display: none;
+  }
+
+  /* SEMANA */
+  .semana-wrapper {
+    background: #ffffff;
   }
 
   .calendario-grade-semana {
     display: grid;
-    grid-template-columns: 58px repeat(6, 1fr);
-    border: 1px solid #dfdfdf;
+    grid-template-columns: 82px repeat(6, 1fr);
+    border: 1px solid #d4d4d4;
     background: #ffffff;
   }
 
   .calendario-canto-vazio {
-    height: 34px;
-    background: #fbfbfb;
-    border-right: 1px solid #dfdfdf;
-    border-bottom: 1px solid #dfdfdf;
+    height: 38px;
+    background: #f1dede;
+    border-right: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
   }
 
   .cabecalho-dia-semana {
-    height: 34px;
-    background: #fbfbfb;
-    border-right: 1px solid #dfdfdf;
-    border-bottom: 1px solid #dfdfdf;
+    height: 38px;
+    background: #ffffff;
+    border-right: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 1px;
+    padding: 2px 4px;
+  }
+
+  .cabecalho-dia-semana.destacado {
+    background: #f1dede;
   }
 
   .cabecalho-dia-nome {
     font-size: 10px;
-    color: #5d5d5d;
     line-height: 1;
+    font-weight: 700;
+    color: #243244;
+    text-align: center;
   }
 
   .cabecalho-dia-numero {
     font-size: 11px;
-    font-weight: 700;
-    color: #2c2c2c;
     line-height: 1;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .cabecalho-dia-bolinha {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #c40000;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
   }
 
   .semana-hora {
-    background: #f3e2e2;
-    border-right: 1px solid #dfdfdf;
+    background: #f1dede;
+    border-right: 1px solid #d4d4d4;
+  }
+
+  .calendario-hora-slot {
+    min-height: 66px;
+    border-bottom: 1px solid #d4d4d4;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 1px;
+    padding: 10px 8px 0 10px;
+    font-size: 12px;
+    line-height: 1.18;
+    font-weight: 700;
+    color: #243244;
+    white-space: pre-line;
+    overflow: hidden;
   }
 
   .celula-semana {
-    min-height: 58px;
-    border-right: 1px solid #dfdfdf;
-    border-bottom: 1px solid #dfdfdf;
+    min-height: 66px;
+    border-right: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
     position: relative;
-    padding: 6px;
     background: #ffffff;
+    padding: 0;
+    overflow: hidden;
   }
 
+  .celula-semana-conteudo {
+    width: 100%;
+    height: 100%;
+    min-height: 66px;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 6px;
+  }
+
+  .mini-box-semana {
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
+    min-height: 50px;
+    background: #fdeeee;
+    border: 1px solid #ef6b6b;
+    border-radius: 0;
+    padding: 6px 6px 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    box-sizing: border-box;
+  }
+
+  .mini-box-semana .mini-box-titulo {
+    font-size: 10px;
+    line-height: 1.05;
+    margin-bottom: 4px;
+    color: #d00000;
+    font-weight: 700;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .mini-box-semana .mini-box-professor {
+    font-size: 8px;
+    line-height: 1.08;
+    color: #111111;
+    font-weight: 700;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .slot-add-semana {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    border: 1px solid #ef6b6b;
+    background: #fdeeee;
+    color: #c40000;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .celula-semana:hover .slot-add-semana {
+    opacity: 1;
+  }
+
+  .celula-semana.tem-reserva:hover .slot-add-semana {
+    display: none;
+  }
+
+  /* MÊS */
   .calendario-grade-mes {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -635,8 +703,21 @@ const styles = `
     right: 8px;
     bottom: 8px;
     opacity: 0;
+    border: 1px solid #df9f9f;
+    background: #f7e8e8;
+    color: #c40000;
+    border-radius: 0;
+    padding: 5px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
   }
 
+  .celula-mes:hover .botao-mes {
+    opacity: 1;
+  }
+
+  /* LISTA */
   .calendario-lista {
     padding: 10px 0;
   }
@@ -678,22 +759,20 @@ const styles = `
     color: #303030;
   }
 
-  .hover-slot {
-    opacity: 0;
-    transition: opacity 0.15s ease;
-  }
-
-  .celula-semana:hover .hover-slot,
-  .calendario-linha-dia:hover .hover-slot,
-  .celula-mes:hover .botao-mes {
-    opacity: 1;
+  /* RODAPÉ */
+  .calendario-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 10px;
   }
 
   .calendario-legenda {
-    margin-top: 10px;
     display: flex;
     justify-content: center;
-    gap: 18px;
+    gap: 16px;
     flex-wrap: wrap;
     font-size: 10px;
     color: #5a5a5a;
@@ -703,6 +782,7 @@ const styles = `
     display: flex;
     align-items: center;
     gap: 6px;
+    font-weight: 700;
   }
 
   .legenda-quadrado {
@@ -710,10 +790,12 @@ const styles = `
     height: 7px;
     border: 1px solid #cbcbcb;
     display: inline-block;
+    border-radius: 2px;
   }
 
   .legenda-quadrado.branco {
-    background: #ffffff;
+    background: #e4e4e4;
+    border-color: #e4e4e4;
   }
 
   .legenda-quadrado.vermelho {
@@ -721,26 +803,22 @@ const styles = `
     border-color: #c40000;
   }
 
-  .legenda-check {
-    width: 8px;
-    height: 8px;
-    border: 1px solid #8d8d8d;
-    display: inline-block;
-    position: relative;
+  .btn-lista-footer {
+    height: 24px;
+    padding: 0 12px;
+    border: 1px solid #d2d6dc;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #4b5563;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  .legenda-check::after {
-    content: "";
-    position: absolute;
-    width: 4px;
-    height: 2px;
-    border-left: 1.5px solid #444;
-    border-bottom: 1.5px solid #444;
-    transform: rotate(-45deg);
-    left: 1px;
-    top: 2px;
-  }
-
+  /* MODAL */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -879,41 +957,48 @@ const styles = `
   }
 
   @media (max-width: 900px) {
-.calendario-page {
-  padding: 28px 20px 28px;
-}
-
-    .calendario-header-title {
-      font-size: 42px;
+    .calendario-page {
+      padding: 24px 18px 24px;
     }
 
- .calendario-header-icon {
-  width: 52px;
-  height: 52px;
-}
+    .calendario-header-title {
+      font-size: 28px;
+    }
+
+    .calendario-header-icon {
+      width: 40px;
+      height: 40px;
+    }
 
     .header-line-main {
       width: 120px;
-      height: 12px;
+      height: 8px;
     }
 
     .header-line-tail {
-      width: 140px;
-    }
-
-    .calendario-toolbar,
-    .calendario-subtoolbar {
-      align-items: stretch;
+      width: 120px;
     }
 
     .calendario-content {
       overflow-x: auto;
     }
 
+    .dia-agenda,
     .calendario-grade-semana,
-    .calendario-grade-dia,
     .calendario-grade-mes {
-      min-width: 760px;
+      min-width: 900px;
+    }
+
+    .filtro-bloco {
+      width: 100%;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filtro-select-wrap {
+      width: 100%;
+      max-width: 260px;
     }
 
     .modal-form-row {
@@ -948,12 +1033,13 @@ function getSemanaAtual(dataBase: Date) {
   const inicio = new Date(data);
   inicio.setDate(data.getDate() + diffInicio);
 
-  const semana = [];
+  const semana: Date[] = [];
   for (let i = 0; i < 6; i++) {
     const d = new Date(inicio);
     d.setDate(inicio.getDate() + i);
     semana.push(d);
   }
+
   return semana;
 }
 
@@ -971,7 +1057,6 @@ function getDiasDoMes(dataBase: Date) {
 
   for (let i = 0; i < inicioIndice; i++) dias.push(null);
   for (let dia = 1; dia <= totalDias; dia++) dias.push(new Date(ano, mes, dia));
-
   while (dias.length % 7 !== 0) dias.push(null);
 
   return dias;
@@ -983,21 +1068,43 @@ function somarDias(data: Date, qtd: number) {
   return nova;
 }
 
+function getFimByInicio(inicio: string) {
+  const mapa: Record<string, string> = {
+    "07:30": "09:10",
+    "09:20": "11:00",
+    "11:10": "13:00",
+    "14:50": "16:30",
+    "16:40": "18:20",
+  };
+
+  return mapa[inicio] ?? "00:00";
+}
+
+function normalizarSala(valor: string) {
+  const encontrada = salas.find(
+    (s) => s.toLowerCase() === valor.toLowerCase().trim()
+  );
+  return encontrada ?? "";
+}
+
 export default function CalendarioDocente() {
   const [modo, setModo] = useState<ModoVisualizacao>("dia");
   const [dataAtual, setDataAtual] = useState(new Date(2026, 1, 5));
   const [filtroSala, setFiltroSala] = useState("");
-  const [mostrarFiltro, setMostrarFiltro] = useState(false);
 
   const [modalAberto, setModalAberto] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState("");
+  const [dataSelecionadaISO, setDataSelecionadaISO] = useState(
+    formatarDataISO(new Date(2026, 1, 5))
+  );
   const [salaSelecionada, setSalaSelecionada] = useState("Sala 30");
   const [horarioSelecionado, setHorarioSelecionado] = useState("14:50 às 16:30");
   const [nomeAula, setNomeAula] = useState("");
 
   const reservasFiltradas = useMemo(() => {
-    if (!filtroSala) return reservasMock;
-    return reservasMock.filter((r) => r.sala === filtroSala);
+    if (!filtroSala.trim()) return reservasMock;
+    const termo = filtroSala.toLowerCase().trim();
+    return reservasMock.filter((r) => r.sala.toLowerCase().includes(termo));
   }, [filtroSala]);
 
   const reservasDoDia = useMemo(() => {
@@ -1013,18 +1120,36 @@ export default function CalendarioDocente() {
   const reservasDoMes = useMemo(() => {
     const ano = dataAtual.getFullYear();
     const mes = dataAtual.getMonth();
+
     return reservasFiltradas.filter((r) => {
       const d = new Date(`${r.data}T00:00:00`);
       return d.getFullYear() === ano && d.getMonth() === mes;
     });
   }, [dataAtual, reservasFiltradas]);
 
-  const abrirModalReserva = (data: Date) => {
+  const abrirModalReserva = (data: Date, horario?: string, salaPadrao?: string) => {
     const dia = String(data.getDate()).padStart(2, "0");
     const mes = String(data.getMonth() + 1).padStart(2, "0");
     const ano = data.getFullYear();
     const nomeDia = diasSemana[data.getDay()];
+
     setDataSelecionada(`${dia}/${mes}/${ano} (${nomeDia})`);
+    setDataSelecionadaISO(formatarDataISO(data));
+
+    if (horario) {
+      setHorarioSelecionado(`${horario} às ${getFimByInicio(horario)}`);
+    } else {
+      setHorarioSelecionado("14:50 às 16:30");
+    }
+
+    if (salaPadrao) {
+      setSalaSelecionada(salaPadrao);
+    } else if (filtroSala.trim()) {
+      setSalaSelecionada(normalizarSala(filtroSala) || "Sala 30");
+    } else {
+      setSalaSelecionada("Sala 30");
+    }
+
     setModalAberto(true);
   };
 
@@ -1061,72 +1186,81 @@ export default function CalendarioDocente() {
 
   const renderDia = () => {
     return (
-      <div className="calendario-grade-dia compacto-dia">
-        <div className="calendario-coluna-horarios">
-          <div className="calendario-topo-dia horario-topo-vazio"></div>
-
-          {horarios.map((h) => (
-            <div key={h} className="calendario-hora-slot hora-slot-dia">
-              {horariosExibicao[h].split("\n").map((linha, i) => (
-                <span key={i}>{linha}</span>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div className="calendario-coluna-dia">
-          <div className="calendario-topo-dia"></div>
-
-          {horarios.map((h) => {
-            const reservasNoHorario = reservasDoDia.filter((r) => r.inicio === h);
-
-            return (
-              <div key={h} className="calendario-linha-dia linha-dia-compacta">
-                {reservasNoHorario.length > 0 ? (
-                  <div className="grupo-reservas-dia">
-                    {reservasNoHorario.map((reserva) => (
-                      <div
-                        key={reserva.id}
-                        className="bloco-reserva bloco-reserva-dia bloco-dia-esboco"
-                      >
-                        <div className="bloco-reserva-titulo">{reserva.titulo}</div>
-                        <div className="bloco-reserva-professor">{reserva.professor}</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : h === "14:50" ? (
-                  <button
-                    className="botao-slot-reserva faixa-solicitar"
-                    onClick={() => abrirModalReserva(dataAtual)}
-                  >
-                    + Solicitar reserva
-                  </button>
-                ) : (
-                  <div className="slot-vazio-dia"></div>
-                )}
+      <div className="dia-wrapper">
+        <div className="dia-agenda">
+          <div className="dia-coluna-horarios">
+            {horarios.map((h) => (
+              <div key={h} className="dia-horario">
+                {horariosExibicao[h]}
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          <div className="dia-grade">
+            {horarios.map((h) => {
+              const reserva = reservasDoDia.find((r) => r.inicio === h);
+
+              return (
+                <div
+                  key={h}
+                  className={`dia-linha ${reserva ? "tem-reserva" : ""}`}
+                >
+                  <div className="dia-linha-conteudo">
+                    {reserva && (
+                      <div className="mini-box-reserva">
+                        <div className="mini-box-titulo">{reserva.sala}</div>
+                        <div className="mini-box-professor">{reserva.professor}</div>
+                      </div>
+                    )}
+
+                    {!reserva && (
+                      <button
+                        type="button"
+                        className="slot-add-dia"
+                        onClick={() => abrirModalReserva(dataAtual, h)}
+                      >
+                        + Solicitar reserva
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
   };
 
   const renderSemana = () => {
-    const semana = getSemanaAtual(dataAtual);
+  const semana = getSemanaAtual(dataAtual);
+  const diaDestaque = dataAtual.getDate();
 
-    return (
+  return (
+    <div className="semana-wrapper">
       <div className="calendario-grade-semana">
         <div className="calendario-canto-vazio"></div>
 
-        {semana.map((dia) => (
-          <div key={dia.toISOString()} className="cabecalho-dia-semana">
-            <span className="cabecalho-dia-nome">
-              {diasSemana[dia.getDay()].replace("-feira", "")}
-            </span>
-            <span className="cabecalho-dia-numero">{dia.getDate()}</span>
-          </div>
-        ))}
+        {semana.map((dia) => {
+          const destacado = dia.getDate() === diaDestaque;
+
+          return (
+            <div
+              key={dia.toISOString()}
+              className={`cabecalho-dia-semana ${destacado ? "destacado" : ""}`}
+            >
+              <span className="cabecalho-dia-nome">
+                {diasSemana[dia.getDay()].replace("-feira", "")}
+              </span>
+
+              {destacado ? (
+                <span className="cabecalho-dia-bolinha">{dia.getDate()}</span>
+              ) : (
+                <span className="cabecalho-dia-numero">{dia.getDate()}</span>
+              )}
+            </div>
+          );
+        })}
 
         {horarios.map((hora) => (
           <React.Fragment key={hora}>
@@ -1143,28 +1277,35 @@ export default function CalendarioDocente() {
               );
 
               return (
-                <div key={`${iso}-${hora}`} className="celula-semana">
-                  {reserva ? (
-                    <div className="bloco-reserva">
-                      <div className="bloco-reserva-titulo">{reserva.titulo}</div>
-                      <div className="bloco-reserva-professor">{reserva.professor}</div>
-                    </div>
-                  ) : (
-                    <button
-                      className="botao-slot-reserva hover-slot"
-                      onClick={() => abrirModalReserva(dia)}
-                    >
-                      + Solicitar reserva
-                    </button>
-                  )}
-                </div>
+                <div
+  key={`${iso}-${hora}`}
+  className={`celula-semana ${reserva ? "tem-reserva" : ""}`}
+>
+  <div className="celula-semana-conteudo">
+    {reserva ? (
+      <div className="mini-box-semana">
+        <div className="mini-box-titulo">{reserva.sala}</div>
+        <div className="mini-box-professor">{reserva.professor}</div>
+      </div>
+    ) : (
+      <button
+        type="button"
+        className="slot-add-semana"
+        onClick={() => abrirModalReserva(dia, hora)}
+      >
+        + Solicitar reserva
+      </button>
+    )}
+  </div>
+</div>
               );
             })}
           </React.Fragment>
         ))}
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   const renderMes = () => {
     const dias = getDiasDoMes(dataAtual);
@@ -1205,7 +1346,8 @@ export default function CalendarioDocente() {
 
                 {reservasDia.length === 0 && (
                   <button
-                    className="botao-slot-reserva botao-mes"
+                    type="button"
+                    className="botao-mes"
                     onClick={() => abrirModalReserva(dia)}
                   >
                     + Solicitar reserva
@@ -1258,16 +1400,20 @@ export default function CalendarioDocente() {
 
         <section className="calendario-toolbar">
           <div className="calendario-toolbar-esquerda">
-            <button className="btn-hoje" onClick={() => setDataAtual(new Date(2026, 1, 5))}>
+            <button
+              type="button"
+              className="btn-hoje"
+              onClick={() => setDataAtual(new Date(2026, 1, 5))}
+            >
               Hoje
             </button>
 
-            <button className="btn-nav-data" onClick={mudarAnterior}>
-              &lt;
+            <button type="button" className="btn-nav-data" onClick={mudarAnterior}>
+              ‹
             </button>
 
-            <button className="btn-nav-data" onClick={mudarProximo}>
-              &gt;
+            <button type="button" className="btn-nav-data" onClick={mudarProximo}>
+              ›
             </button>
 
             <span className="calendario-data-label">{renderTitulo()}</span>
@@ -1275,6 +1421,7 @@ export default function CalendarioDocente() {
 
           <div className="calendario-toolbar-direita">
             <button
+              type="button"
               className={`btn-modo ${modo === "dia" ? "ativo" : ""}`}
               onClick={() => setModo("dia")}
             >
@@ -1282,6 +1429,7 @@ export default function CalendarioDocente() {
             </button>
 
             <button
+              type="button"
               className={`btn-modo ${modo === "semana" ? "ativo" : ""}`}
               onClick={() => setModo("semana")}
             >
@@ -1289,6 +1437,7 @@ export default function CalendarioDocente() {
             </button>
 
             <button
+              type="button"
               className={`btn-modo ${modo === "mes" ? "ativo" : ""}`}
               onClick={() => setModo("mes")}
             >
@@ -1296,6 +1445,7 @@ export default function CalendarioDocente() {
             </button>
 
             <button
+              type="button"
               className={`btn-modo ${modo === "lista" ? "ativo" : ""}`}
               onClick={() => setModo("lista")}
             >
@@ -1305,48 +1455,38 @@ export default function CalendarioDocente() {
         </section>
 
         <section className="calendario-subtoolbar">
-          <div className="filtro-wrapper">
-            <button
-              className="btn-filtro"
-              onClick={() => setMostrarFiltro((prev) => !prev)}
-            >
-              <img src={iconFiltro} alt="Filtro" />
-              <span>{filtroSala || "Filtrar por sala..."}</span>
-              <img src={iconSeta} alt="Abrir" />
-            </button>
+  <div className="filtro-bloco">
+    <div className="filtro-label">
+      <img src={iconFiltro} alt="Filtro" />
+      <span>Filtros:</span>
+    </div>
 
-            {mostrarFiltro && (
-              <div className="dropdown-filtro">
-                <button
-                  className="dropdown-item"
-                  onClick={() => {
-                    setFiltroSala("");
-                    setMostrarFiltro(false);
-                  }}
-                >
-                  Todas as salas
-                </button>
+    <div className="filtro-select-wrap">
+      <select
+        className="filtro-select"
+        value={filtroSala}
+        onChange={(e) => setFiltroSala(e.target.value)}
+      >
+        <option value="">Filtrar por sala...</option>
+        {salas.map((sala) => (
+          <option key={sala} value={sala}>
+            {sala}
+          </option>
+        ))}
+      </select>
 
-                {salas.map((sala) => (
-                  <button
-                    key={sala}
-                    className="dropdown-item"
-                    onClick={() => {
-                      setFiltroSala(sala);
-                      setMostrarFiltro(false);
-                    }}
-                  >
-                    {sala}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+      <img
+        src={iconSeta}
+        alt="Abrir seleção"
+        className="filtro-select-icone"
+      />
+    </div>
+  </div>
+</section>
 
-          <div className="calendario-instrucao">
-            Clique em um retângulo para fazer uma reserva de sala.
-          </div>
-        </section>
+        <div className="calendario-instrucao">
+          Clique em um retângulo para fazer uma reserva de sala.
+        </div>
 
         <section className="calendario-content">
           {modo === "dia" && renderDia()}
@@ -1355,28 +1495,37 @@ export default function CalendarioDocente() {
           {modo === "lista" && renderLista()}
         </section>
 
-        <footer className="calendario-legenda">
-          <div className="legenda-item">
-            <span className="legenda-quadrado branco"></span>
-            <span>Em branco - Horário Livre</span>
+        <footer className="calendario-footer">
+          <div className="calendario-legenda">
+            <div className="legenda-item">
+              <span className="legenda-quadrado branco"></span>
+              <span>Em Branco - Horário Livre</span>
+            </div>
+
+            <div className="legenda-item">
+              <span className="legenda-quadrado vermelho"></span>
+              <span>Em Vermelho - Horário e Sala Reservada</span>
+            </div>
           </div>
 
-          <div className="legenda-item">
-            <span className="legenda-quadrado vermelho"></span>
-            <span>Em vermelho - Horário e Sala Reservada</span>
-          </div>
-
-          <div className="legenda-item">
-            <span className="legenda-check"></span>
-            <span>Ver como lista</span>
-          </div>
+          <button
+            type="button"
+            className="btn-lista-footer"
+            onClick={() => setModo("lista")}
+          >
+            ☰ Ver como lista
+          </button>
         </footer>
       </div>
 
       {modalAberto && (
         <div className="modal-overlay" onClick={() => setModalAberto(false)}>
           <div className="modal-calendario" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-fechar" onClick={() => setModalAberto(false)}>
+            <button
+              type="button"
+              className="modal-fechar"
+              onClick={() => setModalAberto(false)}
+            >
               <img src={iconX} alt="Fechar" />
             </button>
 
@@ -1426,22 +1575,30 @@ export default function CalendarioDocente() {
                       value={horarioSelecionado}
                       onChange={(e) => setHorarioSelecionado(e.target.value)}
                     >
-                      <option>07:30 às 09:10</option>
-                      <option>09:20 às 11:00</option>
-                      <option>11:10 às 13:00</option>
-                      <option>14:50 às 16:30</option>
-                      <option>16:40 às 18:20</option>
+                      <option value="07:30 às 09:10">07:30 às 09:10</option>
+                      <option value="09:20 às 11:00">09:20 às 11:00</option>
+                      <option value="11:10 às 13:00">11:10 às 13:00</option>
+                      <option value="14:50 às 16:30">14:50 às 16:30</option>
+                      <option value="16:40 às 18:20">16:40 às 18:20</option>
                     </select>
                   </div>
                 </div>
               </div>
 
               <div className="modal-actions">
-                <button className="btn-modal-cancelar" onClick={() => setModalAberto(false)}>
+                <button
+                  type="button"
+                  className="btn-modal-cancelar"
+                  onClick={() => setModalAberto(false)}
+                >
                   Cancelar
                 </button>
 
-                <button className="btn-modal-confirmar" onClick={() => setModalAberto(false)}>
+                <button
+                  type="button"
+                  className="btn-modal-confirmar"
+                  onClick={() => setModalAberto(false)}
+                >
                   Confirmar reserva
                 </button>
               </div>
