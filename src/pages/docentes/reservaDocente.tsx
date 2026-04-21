@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import iconVerify from "../../assets/verify_FATEC.png";
+import { api } from "../../services/api";
 
 type StatusReserva = "aprovado" | "pendente" | "rejeitado";
 
@@ -11,31 +12,6 @@ type Reserva = {
   status: StatusReserva;
   motivo?: string;
 };
-
-const mockReservas: Reserva[] = [
-  {
-    id: 1,
-    sala: "Sala 30",
-    data: "23/02/2026",
-    horario: "11:10 às 13:00",
-    status: "aprovado",
-  },
-  {
-    id: 2,
-    sala: "Sala 30",
-    data: "23/02/2026",
-    horario: "11:10 às 13:00",
-    status: "pendente",
-  },
-  {
-    id: 3,
-    sala: "Sala 30",
-    data: "23/02/2026",
-    horario: "11:10 às 13:00",
-    status: "rejeitado",
-    motivo: "Sua reserva não foi aceita, pois atualmente a sala 30 está em reforma.",
-  },
-];
 
 const styles = `
   * {
@@ -502,6 +478,7 @@ const styles = `
 `;
 
 export default function MinhasReservas() {
+  const [reservas, setReservas] = useState<Reserva[]>([]);
   const [filtro, setFiltro] = useState<"todas" | StatusReserva>("todas");
 
   const [modalMotivoAberto, setModalMotivoAberto] = useState(false);
@@ -510,15 +487,50 @@ export default function MinhasReservas() {
 
   const [reservaSelecionada, setReservaSelecionada] = useState<Reserva | null>(null);
 
-  const [novaData, setNovaData] = useState("12/03/2006 (Terça-feira)");
-  const [novoHorario, setNovoHorario] = useState("14:30 às 16:30");
+  const [novaData, setNovaData] = useState("");
+  const [novoHorario, setNovoHorario] = useState("");
   const [motivoAlteracao, setMotivoAlteracao] = useState("");
-  const [novaSala, setNovaSala] = useState("Sala 30");
+  const [novaSala, setNovaSala] = useState("");
+
+  useEffect(() => {
+    const fetchReservas = async () => {
+      try {
+        const response = await api.get('/agendamentos') as { data: unknown[] };
+
+        const reservasFormatadas = response.data.map((item: any) => {
+          let statusFormatado: StatusReserva = "pendente";
+          if (item.status === "APROVADO" || item.status === "Aprovada") statusFormatado = "aprovado";
+          else if (item.status === "REJEITADO" || item.status === "Rejeitada") statusFormatado = "rejeitado";
+
+          let dataFormatada = item.dataReserva;
+          if (item.dataReserva && item.dataReserva.includes('-')) {
+            const dataObj = new Date(item.dataReserva);
+            dataFormatada = dataObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+          }
+
+          return {
+            id: item.idAgendamento || item.id,
+            sala: item.sala?.nomeSala || item.nomeSala || `Sala ${item.salaId}`,
+            data: dataFormatada || "Data não informada",
+            horario: item.horarioInicio && item.horarioFim ? `${item.horarioInicio} às ${item.horarioFim}` : item.horario || "Horário não informado",
+            status: statusFormatado,
+            motivo: item.motivoReserva || item.motivo || "Nenhum motivo informado",
+          };
+        });
+
+        setReservas(reservasFormatadas);
+      } catch (error) {
+        console.error("Erro ao buscar reservas:", error);
+      }
+    };
+
+    fetchReservas();
+  }, []);
 
   const reservasFiltradas = useMemo(() => {
-    if (filtro === "todas") return mockReservas;
-    return mockReservas.filter((r) => r.status === filtro);
-  }, [filtro]);
+    if (filtro === "todas") return reservas;
+    return reservas.filter((r) => r.status === filtro);
+  }, [filtro, reservas]);
 
   const abrirModalMotivo = (reserva: Reserva) => {
     setReservaSelecionada(reserva);
@@ -530,11 +542,13 @@ export default function MinhasReservas() {
     setModalCancelarAberto(true);
   };
 
-const abrirModalAlteracao = (reserva: Reserva) => {
-  setReservaSelecionada(reserva);
-  setNovaSala(reserva.sala);
-  setModalAlteracaoAberto(true);
-};
+  const abrirModalAlteracao = (reserva: Reserva) => {
+    setReservaSelecionada(reserva);
+    setNovaSala(reserva.sala);
+    setNovaData(reserva.data);
+    setNovoHorario(reserva.horario);
+    setModalAlteracaoAberto(true);
+  };
 
   const fecharTudo = () => {
     setModalMotivoAberto(false);
@@ -543,39 +557,63 @@ const abrirModalAlteracao = (reserva: Reserva) => {
     setReservaSelecionada(null);
   };
 
-const confirmarCancelamento = () => {
-  if (!reservaSelecionada) return;
-  alert(`Reserva ${reservaSelecionada.id} cancelada.`);
-  fecharTudo();
-};
+  // FUNÇÃO PARA CANCELAR RESERVA
+  const confirmarCancelamento = async () => {
+    if (!reservaSelecionada) return;
+    try {
+      await api.delete(`/agendamentos/${reservaSelecionada.id}`);
+      
+      setReservas(prev => prev.filter(r => r.id !== reservaSelecionada.id));
+      alert("Reserva cancelada com sucesso.");
+      fecharTudo();
+    } catch (error) {
+      console.error("Erro ao cancelar reserva:", error);
+      alert("Erro ao cancelar reserva. Verifique sua conexão com o servidor.");
+    }
+  };
 
-  const confirmarAlteracao = () => {
-  if (!reservaSelecionada) return;
+  // FUNÇÃO PARA ALTERAR RESERVA
+  const confirmarAlteracao = async () => {
+    if (!reservaSelecionada) return;
 
-  alert(
-    `Solicitação de alteração enviada.
+    try {
+      const payload = {
+        salaNome: novaSala,
+        dataReserva: novaData,
+        horario: novoHorario,
+        motivo: motivoAlteracao
+      };
 
-Sala atual: ${reservaSelecionada.sala}
-Nova sala: ${novaSala}
-Nova data: ${novaData}
-Novo horário: ${novoHorario}`
-  );
+      await api.put(`/agendamentos/${reservaSelecionada.id}`, payload);
+      
+      setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? {
+        ...r, 
+        sala: novaSala,
+        data: novaData,
+        horario: novoHorario,
+        status: "pendente"
+      } : r));
 
-  setMotivoAlteracao("");
-  fecharTudo();
-};
+      alert("Solicitação de alteração enviada com sucesso.");
+      setMotivoAlteracao("");
+      fecharTudo();
+    } catch (error) {
+      console.error("Erro ao alterar reserva:", error);
+      alert("Erro ao solicitar alteração.");
+    }
+  };
 
-const getStatusClass = (status: StatusReserva) => {
-  if (status === "aprovado") return "pill-aprovado";
-  if (status === "pendente") return "pill-pendente";
-  return "pill-rejeitado";
-};
+  const getStatusClass = (status: StatusReserva) => {
+    if (status === "aprovado") return "pill-aprovado";
+    if (status === "pendente") return "pill-pendente";
+    return "pill-rejeitado";
+  };
 
-const getStatusLabel = (status: StatusReserva) => {
-  if (status === "aprovado") return "Aprovada";
-  if (status === "pendente") return "Pendente";
-  return "Rejeitada";
-};
+  const getStatusLabel = (status: StatusReserva) => {
+    if (status === "aprovado") return "Aprovada";
+    if (status === "pendente") return "Pendente";
+    return "Rejeitada";
+  };
 
   return (
     <>
@@ -601,102 +639,102 @@ const getStatusLabel = (status: StatusReserva) => {
         <div className="top-actions">
           <button className="btn-reservar">+ Reservar sala</button>
 
-<div className="filters-bar">
-  <span className="filter-label">Status:</span>
+          <div className="filters-bar">
+            <span className="filter-label">Status:</span>
 
-  <div className="filters-container">
-    <button
-      className={`filter-btn ${filtro === "todas" ? "active" : ""}`}
-      onClick={() => setFiltro("todas")}
-    >
-      Todas
-    </button>
+            <div className="filters-container">
+              <button
+                className={`filter-btn ${filtro === "todas" ? "active" : ""}`}
+                onClick={() => setFiltro("todas")}
+              >
+                Todas
+              </button>
 
-    <button
-      className={`filter-btn ${filtro === "aprovado" ? "active" : ""}`}
-      onClick={() => setFiltro("aprovado")}
-    >
-      Aprovadas
-    </button>
+              <button
+                className={`filter-btn ${filtro === "aprovado" ? "active" : ""}`}
+                onClick={() => setFiltro("aprovado")}
+              >
+                Aprovadas
+              </button>
 
-    <button
-      className={`filter-btn ${filtro === "pendente" ? "active" : ""}`}
-      onClick={() => setFiltro("pendente")}
-    >
-      Pendentes
-    </button>
+              <button
+                className={`filter-btn ${filtro === "pendente" ? "active" : ""}`}
+                onClick={() => setFiltro("pendente")}
+              >
+                Pendentes
+              </button>
 
-    <button
-      className={`filter-btn ${filtro === "rejeitado" ? "active" : ""}`}
-      onClick={() => setFiltro("rejeitado")}
-    >
-      Rejeitadas
-    </button>
-  </div>
-</div>
+              <button
+                className={`filter-btn ${filtro === "rejeitado" ? "active" : ""}`}
+                onClick={() => setFiltro("rejeitado")}
+              >
+                Rejeitadas
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="reservas-grid">
-  {reservasFiltradas.length > 0 ? (
-    reservasFiltradas.map((reserva) => (
-      <div key={reserva.id} className="reserva-card">
-        <p className="reserva-subtitle">Solicitação de reserva</p>
+          {reservasFiltradas.length > 0 ? (
+            reservasFiltradas.map((reserva) => (
+              <div key={reserva.id} className="reserva-card">
+                <p className="reserva-subtitle">Solicitação de reserva</p>
 
-        <h2 className="sala-nome-card">{reserva.sala}</h2>
+                <h2 className="sala-nome-card">{reserva.sala}</h2>
 
-        <div className="status-line">
-          <span className="text-label">Status:</span>
-          <span className={`pill ${getStatusClass(reserva.status)}`}>
-            {getStatusLabel(reserva.status)}
-          </span>
-        </div>
+                <div className="status-line">
+                  <span className="text-label">Status:</span>
+                  <span className={`pill ${getStatusClass(reserva.status)}`}>
+                    {getStatusLabel(reserva.status)}
+                  </span>
+                </div>
 
-        <div className="card-info-line">
-          <span className="text-label">Data:</span>
-          <span className="pill pill-date">
-            {reserva.data} (Segunda-feira)
-          </span>
-        </div>
+                <div className="card-info-line">
+                  <span className="text-label">Data:</span>
+                  <span className="pill pill-date">
+                    {reserva.data}
+                  </span>
+                </div>
 
-        <div className="card-info-line">
-          <span className="text-label">Horário:</span>
-          <span className="pill pill-hour">{reserva.horario}</span>
-        </div>
+                <div className="card-info-line">
+                  <span className="text-label">Horário:</span>
+                  <span className="pill pill-hour">{reserva.horario}</span>
+                </div>
 
-        <div className="card-actions">
-          {reserva.status !== "rejeitado" && (
-            <button
-              className="btn-small btn-alterar"
-              onClick={() => abrirModalAlteracao(reserva)}
-            >
-              Solicitar alteração
-            </button>
+                <div className="card-actions">
+                  {reserva.status !== "rejeitado" && (
+                    <button
+                      className="btn-small btn-alterar"
+                      onClick={() => abrirModalAlteracao(reserva)}
+                    >
+                      Solicitar alteração
+                    </button>
+                  )}
+
+                  {reserva.status !== "rejeitado" && (
+                    <button
+                      className="btn-small btn-cancelar"
+                      onClick={() => abrirModalCancelar(reserva)}
+                    >
+                      Cancelar reserva
+                    </button>
+                  )}
+
+                  {reserva.status === "rejeitado" && (
+                    <button
+                      className="btn-small btn-motivo"
+                      onClick={() => abrirModalMotivo(reserva)}
+                    >
+                      Visualizar motivo
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="empty-state">Nenhuma reserva encontrada para esse filtro.</p>
           )}
-
-          {reserva.status !== "rejeitado" && (
-            <button
-              className="btn-small btn-cancelar"
-              onClick={() => abrirModalCancelar(reserva)}
-            >
-              Cancelar reserva
-            </button>
-          )}
-
-          {reserva.status === "rejeitado" && (
-            <button
-              className="btn-small btn-motivo"
-              onClick={() => abrirModalMotivo(reserva)}
-            >
-              Visualizar motivo
-            </button>
-          )}
         </div>
-      </div>
-    ))
-  ) : (
-    <p className="empty-state">Nenhuma reserva encontrada para esse filtro.</p>
-  )}
-</div>
 
         {modalAlteracaoAberto && reservaSelecionada && (
           <div className="modal-overlay" onClick={fecharTudo}>
@@ -711,19 +749,19 @@ const getStatusLabel = (status: StatusReserva) => {
 
               <div className="modal-body">
                 <div>
-  <div className="modal-label">Alterar sala:</div>
-  <select
-    className="input"
-    value={novaSala}
-    onChange={(e) => setNovaSala(e.target.value)}
-  >
-    <option value="Sala 26">Sala 26</option>
-    <option value="Sala 27">Sala 27</option>
-    <option value="Sala 28">Sala 28</option>
-    <option value="Sala 29">Sala 29</option>
-    <option value="Sala 30">Sala 30</option>
-  </select>
-</div>
+                  <div className="modal-label">Alterar sala:</div>
+                  <select
+                    className="input"
+                    value={novaSala}
+                    onChange={(e) => setNovaSala(e.target.value)}
+                  >
+                    <option value="Sala 26">Sala 26</option>
+                    <option value="Sala 27">Sala 27</option>
+                    <option value="Sala 28">Sala 28</option>
+                    <option value="Sala 29">Sala 29</option>
+                    <option value="Sala 30">Sala 30</option>
+                  </select>
+                </div>
 
                 <div className="row-2">
                   <div>
@@ -780,16 +818,16 @@ const getStatusLabel = (status: StatusReserva) => {
                   <h2 className="sala-nome-card">{reservaSelecionada.sala}</h2>
 
                   <div className="status-line">
-  <span className="text-label">Status:</span>
-  <span className={`pill ${getStatusClass(reservaSelecionada.status)}`}>
-    {getStatusLabel(reservaSelecionada.status)}
-  </span>
-</div>
+                    <span className="text-label">Status:</span>
+                    <span className={`pill ${getStatusClass(reservaSelecionada.status)}`}>
+                      {getStatusLabel(reservaSelecionada.status)}
+                    </span>
+                  </div>
 
                   <div className="card-info-line">
                     <span className="text-label">Data:</span>
                     <span className="pill pill-date">
-                      {reservaSelecionada.data} (Segunda-feira)
+                      {reservaSelecionada.data}
                     </span>
                   </div>
 

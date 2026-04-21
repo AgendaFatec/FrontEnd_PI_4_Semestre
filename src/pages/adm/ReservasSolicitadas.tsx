@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import iconVerify from "../../assets/verify_FATEC.png";
 import iconX from "../../assets/x.svg";
 import iconData from "../../assets/data.svg";
 import iconHorario from "../../assets/horario.svg";
-// import { api } from "../../services/api"; // Descomente quando for integrar
+import { api } from "../../services/api";
 
 type StatusReserva = "Aprovada" | "Pendente" | "Rejeitada";
 
@@ -15,33 +15,6 @@ type Reserva = {
   status: StatusReserva;
   motivo: string;
 };
-
-const mockReservas: Reserva[] = [
-  {
-    id: 1,
-    sala: "Sala 30",
-    data: "23/02/2026",
-    horario: "11:10 às 13:00",
-    status: "Pendente",
-    motivo: "Reserva solicitada para a realização de uma aula de Desenvolvimento Web II na sala 30",
-  },
-  {
-    id: 2,
-    sala: "Sala 31",
-    data: "24/02/2026",
-    horario: "09:20 às 11:00",
-    status: "Pendente",
-    motivo: "Reposição de aula prática de Redes de Computadores.",
-  },
-  {
-    id: 3,
-    sala: "Sala 30",
-    data: "20/02/2026",
-    horario: "07:30 às 09:10",
-    status: "Aprovada",
-    motivo: "Aula padrão da grade curricular.",
-  },
-];
 
 const styles = `
   * { box-sizing: border-box; }
@@ -179,25 +152,45 @@ const styles = `
 `;
 
 export default function ReservasSolicitadas() {
-  const [reservas, setReservas] = useState<Reserva[]>(mockReservas);
+  const [reservas, setReservas] = useState<Reserva[]>([]);
   const [filtroAtivo, setFiltroAtivo] = useState<"Todas" | StatusReserva>("Todas");
   const [modalRevisarAberto, setModalRevisarAberto] = useState(false);
   const [reservaSelecionada, setReservaSelecionada] = useState<Reserva | null>(null);
 
-  /*
-  // PREPARAÇÃO DE INTEGRAÇÃO COM A API: BUSCAR RESERVAS
   useEffect(() => {
     const fetchReservas = async () => {
       try {
-        const response = await api.get('/reservas/solicitadas');
-        setReservas(response.data);
+        const response = await api.get('/agendamentos');
+        
+        const reservasFormatadas = (response as any).data.map((item: any) => {
+          let statusFormatado: StatusReserva = "Pendente";
+          if (item.status === "APROVADO" || item.status === "Aprovada") statusFormatado = "Aprovada";
+          else if (item.status === "REJEITADO" || item.status === "Rejeitada") statusFormatado = "Rejeitada";
+
+          let dataFormatada = item.dataReserva;
+          if (item.dataReserva && item.dataReserva.includes('-')) {
+            const dataObj = new Date(item.dataReserva);
+            dataFormatada = dataObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); 
+          }
+
+          return {
+            id: item.idAgendamento || item.id,
+            sala: item.sala?.nomeSala || item.nomeSala || `Sala ${item.salaId}`,
+            data: dataFormatada || "Data não informada",
+            horario: item.horarioInicio && item.horarioFim ? `${item.horarioInicio} às ${item.horarioFim}` : item.horario || "Horário não informado",
+            status: statusFormatado,
+            motivo: item.motivoReserva || item.motivo || "Nenhum motivo informado",
+          };
+        });
+
+        setReservas(reservasFormatadas);
       } catch (error) {
-        console.error("Erro ao buscar reservas:", error);
+        console.error("Erro ao buscar reservas do banco:", error);
       }
     };
+
     fetchReservas();
   }, []);
-  */
 
   const reservasPendentes = reservas.filter(r => r.status === "Pendente" && (filtroAtivo === "Todas" || filtroAtivo === "Pendente"));
   const reservasAprovadas = reservas.filter(r => r.status === "Aprovada" && (filtroAtivo === "Todas" || filtroAtivo === "Aprovada"));
@@ -213,24 +206,21 @@ export default function ReservasSolicitadas() {
     setReservaSelecionada(null);
   };
 
-  const processarReserva = async (novoStatus: StatusReserva) => {
+  const handleProcessarReserva = (novoStatus: StatusReserva) => {
     if (!reservaSelecionada) return;
 
-    /*
-    // PREPARAÇÃO DE INTEGRAÇÃO COM A API: ATUALIZAR STATUS DA RESERVA
-    try {
-      await api.patch(`/reservas/${reservaSelecionada.id}/status`, { status: novoStatus });
-      setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? { ...r, status: novoStatus } : r));
-      fecharModal();
-    } catch (error) {
-      console.error("Erro ao atualizar status:", error);
-      alert("Ocorreu um erro ao processar a reserva.");
-    }
-    */
+    const statusBackend = novoStatus === "Aprovada" ? "APROVADO" : novoStatus === "Rejeitada" ? "REJEITADO" : "PENDENTE";
 
-    // Comportamento atual do mock-up:
-    setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? { ...r, status: novoStatus } : r));
-    fecharModal();
+
+    api.put(`/agendamentos/${reservaSelecionada.id}/status`, { status: statusBackend })
+      .then(() => {
+        setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? { ...r, status: novoStatus } : r));
+        fecharModal();
+      })
+      .catch((error: unknown) => {
+        console.error("Erro ao atualizar status:", error);
+        alert("Ocorreu um erro ao processar a reserva. Verifique a conexão com o servidor.");
+      });
   };
 
   const CardReserva = ({ reserva }: { reserva: Reserva }) => (
@@ -245,7 +235,7 @@ export default function ReservasSolicitadas() {
 
       <div className="card-info-line">
         <span className="text-label">Data:</span>
-        <span className="pill pill-date">{reserva.data} (Segunda-feira)</span>
+        <span className="pill pill-date">{reserva.data}</span>
       </div>
 
       <div className="card-info-line">
@@ -349,7 +339,7 @@ export default function ReservasSolicitadas() {
                   <label className="modal-label">Data da reserva</label>
                   <div className="input-with-icon">
                     <img src={iconData} alt="Data" className="input-icon" />
-                    <input type="text" className="input-styled" value={`${reservaSelecionada.data} (Terça-feira)`} readOnly />
+                    <input type="text" className="input-styled" value={`${reservaSelecionada.data}`} readOnly />
                   </div>
                 </div>
 
@@ -369,10 +359,10 @@ export default function ReservasSolicitadas() {
 
               <div className="modal-footer">
                 <div className="footer-row">
-                  <button className="btn-modal btn-rejeitar" onClick={() => processarReserva('Rejeitada')}>
+                  <button className="btn-modal btn-rejeitar" onClick={() => handleProcessarReserva('Rejeitada')}>
                     Rejeitar reserva
                   </button>
-                  <button className="btn-modal btn-aprovar" onClick={() => processarReserva('Aprovada')}>
+                  <button className="btn-modal btn-aprovar" onClick={() => handleProcessarReserva('Aprovada')}>
                     Aprovar reserva
                   </button>
                 </div>
