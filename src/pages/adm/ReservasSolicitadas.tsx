@@ -14,6 +14,9 @@ type Reserva = {
   horario: string;
   status: StatusReserva;
   motivo: string;
+  usuarioId: number;
+  docenteNome: string;
+  isAlteracao: boolean;
 };
 
 const styles = `
@@ -69,6 +72,8 @@ const styles = `
     padding: 20px; display: flex; flex-direction: column;
   }
   .reserva-subtitle { margin: 0 0 6px; font-size: 13px; color: #757575; font-weight: 500; }
+  .reserva-subtitle.alteracao { color: #005c6d; font-weight: 700; }
+  
   .sala-nome-card {
     margin: 0 0 12px; padding-left: 10px; border-left: 3px solid #005c6d;
     font-family: 'Roboto Slab', serif; font-size: 24px; font-weight: 700; color: #005c6d;
@@ -86,6 +91,7 @@ const styles = `
   .pill-aprovada { background: #00C853; color: #ffffff; }
   .pill-pendente { background: #FBC02D; color: #ffffff; }
   .pill-rejeitada { background: #B20000; color: #ffffff; }
+  .pill-docente { background: #EAEAEA; color: #3B3D41; }
 
   .btn-revisar {
     margin-top: 16px; height: 36px; background: #005c6d; color: #ffffff;
@@ -154,79 +160,135 @@ const styles = `
 export default function ReservasSolicitadas() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [filtroAtivo, setFiltroAtivo] = useState<"Todas" | StatusReserva>("Todas");
+  
+  // Controle de modais
   const [modalRevisarAberto, setModalRevisarAberto] = useState(false);
+  const [modalRejeitarAberto, setModalRejeitarAberto] = useState(false);
+  
   const [reservaSelecionada, setReservaSelecionada] = useState<Reserva | null>(null);
+  const [motivoRejeicao, setMotivoRejeicao] = useState("");
 
   useEffect(() => {
-    const fetchReservas = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get('/agendamentos');
-        
-        const reservasFormatadas = (response as any).data.map((item: any) => {
-          let statusFormatado: StatusReserva = "Pendente";
-          if (item.status === "APROVADO" || item.status === "Aprovada") statusFormatado = "Aprovada";
-          else if (item.status === "REJEITADO" || item.status === "Rejeitada") statusFormatado = "Rejeitada";
+        const resAgendamentos = await api.get('/agendamentos');
+        const agendamentosData = (resAgendamentos as any).data;
 
-          let dataFormatada = item.dataReserva;
-          if (item.dataReserva && item.dataReserva.includes('-')) {
-            const dataObj = new Date(item.dataReserva);
+        const listaReservas = Array.isArray(agendamentosData) ? agendamentosData : (agendamentosData?.data || []);
+        
+        const reservasFormatadas = listaReservas.map((item: any) => {
+          let statusFormatado: StatusReserva = "Pendente";
+          if (item.statusAgendamento === "AGENDADO") statusFormatado = "Aprovada";
+          else if (item.statusAgendamento === "CANCELADO" || item.statusAgendamento === "REJEITADO") statusFormatado = "Rejeitada";
+
+          let dataFormatada = item.dataAgendamento;
+          if (item.dataAgendamento) {
+            const dataObj = new Date(item.dataAgendamento);
             dataFormatada = dataObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); 
           }
 
+          const motivoTexto = item.descricao || "Nenhum motivo informado";
+          const isAlteracao = motivoTexto.includes("[ALTERAÇÃO]");
+          const motivoLimpo = isAlteracao ? motivoTexto.replace("[ALTERAÇÃO]", "").trim() : motivoTexto;
+
           return {
             id: item.idAgendamento || item.id,
-            sala: item.sala?.nomeSala || item.nomeSala || `Sala ${item.salaId}`,
+            sala: item.salaNome || item.sala?.nomeSala || `Sala ${item.salaId}`,
             data: dataFormatada || "Data não informada",
-            horario: item.horarioInicio && item.horarioFim ? `${item.horarioInicio} às ${item.horarioFim}` : item.horario || "Horário não informado",
+            horario: item.horaInicio && item.horaFim ? `${item.horaInicio} às ${item.horaFim}` : "Horário não informado",
             status: statusFormatado,
-            motivo: item.motivoReserva || item.motivo || "Nenhum motivo informado",
+            motivo: motivoLimpo,
+            usuarioId: item.usuarioId,
+            docenteNome: item.docenteNome || "Professor não identificado", 
+            isAlteracao
           };
         });
 
         setReservas(reservasFormatadas);
       } catch (error) {
-        console.error("Erro ao buscar reservas do banco:", error);
+        console.error("Erro ao buscar dados:", error);
       }
     };
 
-    fetchReservas();
+    fetchData();
   }, []);
 
   const reservasPendentes = reservas.filter(r => r.status === "Pendente" && (filtroAtivo === "Todas" || filtroAtivo === "Pendente"));
   const reservasAprovadas = reservas.filter(r => r.status === "Aprovada" && (filtroAtivo === "Todas" || filtroAtivo === "Aprovada"));
   const reservasRejeitadas = reservas.filter(r => r.status === "Rejeitada" && (filtroAtivo === "Todas" || filtroAtivo === "Rejeitada"));
 
-  const abrirModal = (reserva: Reserva) => {
+  const abrirModalRevisar = (reserva: Reserva) => {
     setReservaSelecionada(reserva);
     setModalRevisarAberto(true);
   };
 
-  const fecharModal = () => {
+  const fecharModais = () => {
     setModalRevisarAberto(false);
+    setModalRejeitarAberto(false);
     setReservaSelecionada(null);
+    setMotivoRejeicao("");
   };
 
-  const handleProcessarReserva = (novoStatus: StatusReserva) => {
+  const handleAprovarReserva = async () => {
     if (!reservaSelecionada) return;
 
-    const statusBackend = novoStatus === "Aprovada" ? "APROVADO" : novoStatus === "Rejeitada" ? "REJEITADO" : "PENDENTE";
+    try {
+      await api.post(`/agendamentos/${reservaSelecionada.id}/aprovar`);
+      
+      if (reservaSelecionada.isAlteracao) {
+        await api.put(`/agendamentos/${reservaSelecionada.id}`, { descricao: reservaSelecionada.motivo });
+      }
 
-
-    api.put(`/agendamentos/${reservaSelecionada.id}/status`, { status: statusBackend })
-      .then(() => {
-        setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? { ...r, status: novoStatus } : r));
-        fecharModal();
-      })
-      .catch((error: unknown) => {
-        console.error("Erro ao atualizar status:", error);
-        alert("Ocorreu um erro ao processar a reserva. Verifique a conexão com o servidor.");
-      });
+      setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? { ...r, status: "Aprovada", isAlteracao: false } : r));
+      fecharModais();
+    } catch (error) {
+      console.error("Erro ao aprovar:", error);
+      alert("Ocorreu um erro ao aprovar a reserva. Verifique a conexão com o servidor e se a sala não possui conflitos de horário.");
+    }
   };
 
-  const CardReserva = ({ reserva }: { reserva: Reserva }) => (
-    <div className="reserva-card">
-      <p className="reserva-subtitle">Solicitação de reserva</p>
+  const abrirPopUpRejeitar = () => {
+    setModalRevisarAberto(false);
+    setModalRejeitarAberto(true);
+  };
+
+  const confirmarRejeicao = async () => {
+    if (!reservaSelecionada) return;
+
+    try {
+      const justificativa = motivoRejeicao.trim() ? `[REJEITADA] ${motivoRejeicao}` : "[REJEITADA] Reserva não aprovada pela coordenação.";
+      await api.put(`/agendamentos/${reservaSelecionada.id}`, { descricao: justificativa });
+
+      await api.post(`/agendamentos/${reservaSelecionada.id}/cancelar`);
+
+      setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? { 
+        ...r, 
+        status: "Rejeitada", 
+        motivo: justificativa,
+        isAlteracao: false 
+      } : r));
+
+      fecharModais();
+    } catch (error) {
+      console.error("Erro ao rejeitar:", error);
+      alert("Ocorreu um erro ao rejeitar a reserva.");
+    }
+  };
+
+  const renderReservaCard = (reserva: Reserva) => (
+    <div key={reserva.id} className="reserva-card">
+      {reserva.isAlteracao ? (
+        <p className="reserva-subtitle alteracao">⚠️ Solicitação de alteração</p>
+      ) : (
+        <p className="reserva-subtitle">Solicitação de reserva nova</p>
+      )}
+      
       <h2 className="sala-nome-card">{reserva.sala}</h2>
+
+      <div className="card-info-line">
+        <span className="text-label">Docente:</span>
+        <span className="pill pill-docente">{reserva.docenteNome}</span>
+      </div>
 
       <div className="card-info-line">
         <span className="text-label">Status:</span>
@@ -244,8 +306,8 @@ export default function ReservasSolicitadas() {
       </div>
 
       {reserva.status === "Pendente" && (
-        <button className="btn-revisar" onClick={() => abrirModal(reserva)}>
-          Revisar reserva
+        <button className="btn-revisar" onClick={() => abrirModalRevisar(reserva)}>
+          Revisar solicitação
         </button>
       )}
     </div>
@@ -295,7 +357,7 @@ export default function ReservasSolicitadas() {
           <div>
             <h3 className="section-title">Reservas pendentes:</h3>
             <div className="reservas-grid">
-              {reservasPendentes.map((r) => <CardReserva key={r.id} reserva={r} />)}
+              {reservasPendentes.map(renderReservaCard)}
             </div>
           </div>
         )}
@@ -304,7 +366,7 @@ export default function ReservasSolicitadas() {
           <div>
             <h3 className="section-title">Reservas aprovadas:</h3>
             <div className="reservas-grid">
-              {reservasAprovadas.map((r) => <CardReserva key={r.id} reserva={r} />)}
+              {reservasAprovadas.map(renderReservaCard)}
             </div>
           </div>
         )}
@@ -313,25 +375,34 @@ export default function ReservasSolicitadas() {
           <div>
             <h3 className="section-title">Reservas rejeitadas:</h3>
             <div className="reservas-grid">
-              {reservasRejeitadas.map((r) => <CardReserva key={r.id} reserva={r} />)}
+              {reservasRejeitadas.map(renderReservaCard)}
             </div>
           </div>
         )}
 
+        {/* MODAL: REVISAR RESERVA */}
         {modalRevisarAberto && reservaSelecionada && (
-          <div className="modal-overlay" onClick={fecharModal}>
+          <div className="modal-overlay" onClick={fecharModais}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <button className="modal-close" onClick={fecharModal}>
+              <button className="modal-close" onClick={fecharModais}>
                 <img src={iconX} alt="Fechar" className="w-4 h-4" />
               </button>
 
               <div className="modal-header-line">
-                <h2 className="modal-title">Solicitação de reserva</h2>
+                <h2 className="modal-title">
+                  {reservaSelecionada.isAlteracao ? "Revisar Alteração" : "Solicitação de reserva"}
+                </h2>
               </div>
 
-              <div className="form-group">
-                <label className="modal-label">Sala solicitada:</label>
-                <input type="text" className="input-styled" value={reservaSelecionada.sala} readOnly />
+              <div className="row-2">
+                <div className="form-group">
+                  <label className="modal-label">Docente:</label>
+                  <input type="text" className="input-styled" value={reservaSelecionada.docenteNome} readOnly />
+                </div>
+                <div className="form-group">
+                  <label className="modal-label">Sala solicitada:</label>
+                  <input type="text" className="input-styled" value={reservaSelecionada.sala} readOnly />
+                </div>
               </div>
 
               <div className="row-2">
@@ -353,21 +424,60 @@ export default function ReservasSolicitadas() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="modal-label">Motivo da Reserva</label>
+                <label className="modal-label">Motivo da Reserva / Alteração</label>
                 <textarea className="textarea-styled" value={reservaSelecionada.motivo} readOnly />
               </div>
 
               <div className="modal-footer">
                 <div className="footer-row">
-                  <button className="btn-modal btn-rejeitar" onClick={() => handleProcessarReserva('Rejeitada')}>
+                  <button className="btn-modal btn-rejeitar" onClick={abrirPopUpRejeitar}>
                     Rejeitar reserva
                   </button>
-                  <button className="btn-modal btn-aprovar" onClick={() => handleProcessarReserva('Aprovada')}>
+                  <button className="btn-modal btn-aprovar" onClick={handleAprovarReserva}>
                     Aprovar reserva
                   </button>
                 </div>
-                <button className="btn-modal btn-cancelar" onClick={fecharModal}>
+                <button className="btn-modal btn-cancelar" onClick={fecharModais}>
                   Cancelar
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* MODAL SECUNDÁRIO: MOTIVO DA REJEIÇÃO */}
+        {modalRejeitarAberto && reservaSelecionada && (
+          <div className="modal-overlay" onClick={fecharModais}>
+            <div className="modal-content small" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={fecharModais}>
+                <img src={iconX} alt="Fechar" className="w-4 h-4" />
+              </button>
+
+              <div className="modal-header-line">
+                <h2 className="modal-title">Motivo da Rejeição</h2>
+              </div>
+
+              <div className="form-group">
+                <label className="modal-label">Informe ao docente o motivo de rejeitar esta reserva:</label>
+                <textarea 
+                  className="textarea-styled" 
+                  placeholder="Ex: A sala estará em manutenção nesta data..."
+                  value={motivoRejeicao} 
+                  onChange={(e) => setMotivoRejeicao(e.target.value)} 
+                  autoFocus
+                />
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn-modal btn-cancelar" onClick={() => {
+                  setModalRejeitarAberto(false);
+                  setModalRevisarAberto(true);
+                }}>
+                  Voltar
+                </button>
+                <button className="btn-modal btn-rejeitar" onClick={confirmarRejeicao}>
+                  Confirmar Rejeição
                 </button>
               </div>
 

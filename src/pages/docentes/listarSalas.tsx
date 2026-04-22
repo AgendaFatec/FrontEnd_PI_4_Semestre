@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { api } from '../../services/api';
+import { jwtDecode } from 'jwt-decode';
 
 import iconSala from '../../assets/sala.svg';
 import iconPesquisa from '../../assets/pesquisa.svg';
@@ -200,6 +201,7 @@ export default function ListaSalasDocentes() {
   const [fotoAtual, setFotoAtual] = useState<string>(''); 
 
   const [dataReserva, setDataReserva] = useState('');
+  const [dataReservaIso, setDataReservaIso] = useState('');
   const [horarioReserva, setHorarioReserva] = useState('');
   const [motivoReserva, setMotivoReserva] = useState('');
   const [mensagem, setMensagem] = useState<{ tipo: 'sucesso' | 'erro', texto: string } | null>(null);
@@ -210,28 +212,42 @@ export default function ListaSalasDocentes() {
   useEffect(() => {
     const fetchSalas = async () => {
       try {
-        const response = await api.get('/inventarios');
-        
-        const salasFormatadas = (response as any).data.map((item: any) => ({
-          id: item.idSala,
-          idInventario: item.inventario.idInventario,
-          nome: item.nomeSala,
-          capacidade: item.capacidadeAlunos || 0,
-          maquinas: item.inventario.dispositivos.map((d: any) => ({
-            nome: d.tipoDispositivo,
-            qtd: d.quantidade 
-          })),
-          tecnologias: item.inventario.tecnologias.map((t: any) => t.nomeTecnologia),
-          imagem: item.fotoSala || imgSala,
-          fotos: item.fotoSala ? [item.fotoSala] : [imgSala]
-        }));
-        
+        const response = await api.get<any>('/inventarios');
+
+        let arrayDeSalas = [];
+        if (Array.isArray(response.data)) { arrayDeSalas = response.data; } 
+        else if (response.data && Array.isArray(response.data.data)) { arrayDeSalas = response.data.data; }
+
+        const salasFormatadas = arrayDeSalas.map((item: any) => {
+          let arrayFotos: string[] = [];
+          const fotoBD = item.fotoSala || item.sala?.fotoSala;
+          if (fotoBD) { arrayFotos = fotoBD.split(','); }
+
+          return {
+            id: item.salaId, 
+            idInventario: item.idInventario, 
+            nome: item.salaNome || item.sala?.nomeSala || 'Sala Sem Nome',
+            capacidade: item.capacidadeAlunos || item.sala?.capacidadeAlunos || 0,
+            
+            maquinas: Array.isArray(item.dispositivos) ? item.dispositivos.map((d: any) => ({
+              nome: d.nomeDispositivo || d.dispositivo?.nomeDispositivo || 'Dispositivo',
+              qtd: d.quantidade || 1
+            })) : [],
+
+            tecnologias: Array.isArray(item.tecnologias) ? item.tecnologias.map((t: any) => (
+              t.nomeTecnologia || t.tecnologia?.nomeTecnologia || 'Tecnologia'
+            )) : [],
+            
+            imagem: arrayFotos.length > 0 ? arrayFotos[0] : imgSala,
+            fotos: arrayFotos.length > 0 ? arrayFotos : [imgSala]
+          };
+        });
+
         setSalas(salasFormatadas);
       } catch (error) {
         console.error("Erro ao buscar salas do banco:", error);
       }
     };
-
     fetchSalas();
   }, []);
 
@@ -301,14 +317,55 @@ export default function ListaSalasDocentes() {
     setCalendarioAberto(false);
   };
 
-  const confirmarReserva = () => {
-    const sucesso = Math.random() > 0.3; 
-    if (sucesso) {
-      setMensagem({ tipo: 'sucesso', texto: 'Sala reservada com sucesso!' });
+  const selecionarData = (dia: number) => {
+    const d = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth(), dia);
+    const diaStr = String(dia).padStart(2, '0');
+    const mesStr = String(dataVisualizacao.getMonth() + 1).padStart(2, '0');
+    const anoStr = dataVisualizacao.getFullYear();
+    const diasExtenso = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const nomeSemana = diasExtenso[d.getDay()];
+
+    setDataReserva(`${diaStr}/${mesStr}/${anoStr} (${nomeSemana})`);
+    setDataReservaIso(`${anoStr}-${mesStr}-${diaStr}`);
+    setCalendarioAberto(false);
+  };
+
+  const confirmarReserva = async () => {
+    if (!salaSelecionada || !dataReservaIso || !horarioReserva) {
+      setMensagem({ tipo: 'erro', texto: 'Por favor, selecione uma data e um horário.' });
+      setTimeout(() => setMensagem(null), 4000);
+      return;
+    }
+
+    let usuarioIdLogado = null;
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode<{ sub: number }>(token);
+        usuarioIdLogado = decoded.sub;
+      } catch (e) {
+        console.error("Erro ao ler o token JWT:", e);
+      }
+    }
+
+    const [horaInicio, horaFim] = horarioReserva.split(' as ');
+
+    try {
+      await api.post('/agendamentos/solicitar-reserva', {
+        salaId: salaSelecionada.id,
+        usuarioId: usuarioIdLogado,
+        dataAgendamento: new Date(`${dataReservaIso}T00:00:00Z`).toISOString(),
+        horaInicio: horaInicio.trim(),
+        horaFim: horaFim.trim(),
+        descricao: motivoReserva
+      });
+
+      setMensagem({ tipo: 'sucesso', texto: 'Solicitação de reserva enviada com sucesso!' });
       fecharModais();
-      setDataReserva(''); setHorarioReserva(''); setMotivoReserva('');
-    } else {
-      setMensagem({ tipo: 'erro', texto: 'Erro ao reservar sala. Verifique a disponibilidade e tente novamente.' });
+      setDataReserva(''); setHorarioReserva(''); setMotivoReserva(''); setDataReservaIso('');
+    } catch (error: any) {
+      console.error(error);
+      setMensagem({ tipo: 'erro', texto: error.response?.data?.message || 'Erro ao solicitar reserva. Verifique a disponibilidade da sala.' });
     }
     setTimeout(() => setMensagem(null), 4000);
   };
@@ -322,18 +379,6 @@ export default function ListaSalasDocentes() {
 
   const mudarMes = (delta: number) => {
     setDataVisualizacao(new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth() + delta, 1));
-  };
-
-  const selecionarData = (dia: number) => {
-    const d = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth(), dia);
-    const diaStr = String(dia).padStart(2, '0');
-    const mesStr = String(dataVisualizacao.getMonth() + 1).padStart(2, '0');
-    const anoStr = dataVisualizacao.getFullYear();
-    const diasExtenso = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-    const nomeSemana = diasExtenso[d.getDay()];
-
-    setDataReserva(`${diaStr}/${mesStr}/${anoStr} (${nomeSemana})`);
-    setCalendarioAberto(false);
   };
 
   return (

@@ -1,6 +1,10 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import iconVerify from "../../assets/verify_FATEC.png";
+import iconData from "../../assets/data.svg";
+import iconHorario from "../../assets/horario.svg";
+import iconSeta from "../../assets/seta.svg";
 import { api } from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 type StatusReserva = "aprovado" | "pendente" | "rejeitado";
 
@@ -11,6 +15,11 @@ type Reserva = {
   horario: string;
   status: StatusReserva;
   motivo?: string;
+};
+
+type SalaDisponivel = {
+  id: number;
+  nome: string;
 };
 
 const styles = `
@@ -24,6 +33,22 @@ const styles = `
     padding: 34px 42px 60px;
     font-family: 'Inter', sans-serif;
     color: #3b3d41;
+    position: relative;
+  }
+
+  /* Feedback Messages (Toast) */
+  .toast-mensagem {
+    position: fixed; top: 20px; right: 20px; padding: 16px 24px;
+    border-radius: 8px; color: white; font-weight: 600;
+    z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease-out forwards;
+  }
+  .toast-mensagem.sucesso { background-color: #005C6D; }
+  .toast-mensagem.erro { background-color: #B20000; }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
 
   .header-salas {
@@ -72,13 +97,13 @@ const styles = `
     border-radius: 999px;
   }
 
- .top-actions {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-bottom: 26px;
-}
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+  }
 
   .btn-reservar {
     height: 42px;
@@ -97,53 +122,53 @@ const styles = `
     filter: brightness(0.96);
   }
 
-.filters-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+  .filters-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 
-.filter-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #6f6f6f;
-  line-height: 1;
-}
+  .filter-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6f6f6f;
+    line-height: 1;
+  }
 
-.filters-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+  .filters-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
 
-.filter-btn {
-  min-width: 112px;
-  height: 42px;
-  padding: 0 22px;
-  border-radius: 18px;
-  border: 2px solid #c89b9b;
-  background: #ffffff;
-  color: #2f3b44;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: none;
-}
+  .filter-btn {
+    min-width: 112px;
+    height: 42px;
+    padding: 0 22px;
+    border-radius: 18px;
+    border: 2px solid #c89b9b;
+    background: #ffffff;
+    color: #2f3b44;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: none;
+  }
 
-.filter-btn:hover {
-  border-color: #b20000;
-  color: #b20000;
-}
+  .filter-btn:hover {
+    border-color: #b20000;
+    color: #b20000;
+  }
 
-.filter-btn.active {
-  background: #c40000;
-  color: #ffffff;
-  border-color: #c40000;
-}
+  .filter-btn.active {
+    background: #c40000;
+    color: #ffffff;
+    border-color: #c40000;
+  }
 
   .reservas-grid {
     display: grid;
@@ -370,6 +395,26 @@ const styles = `
     gap: 12px;
   }
 
+  /* Input icones e calendário customizado */
+  .input-with-icon { position: relative; display: flex; align-items: center; }
+  .input-icon { position: absolute; left: 12px; width: 20px; pointer-events: none; }
+  .custom-calendar {
+    position: absolute; top: calc(100% + 4px); left: 0; background: white;
+    border: 1px solid #D5D7D9; border-radius: 12px; padding: 16px;
+    z-index: 20; width: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 700; color: #005C6D; }
+  .calendar-nav { cursor: pointer; color: #757575; padding: 0 8px; user-select: none; font-size: 18px; }
+  .calendar-nav:hover { color: #B20000; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+  .calendar-day-name { font-size: 12px; font-weight: 700; color: #757575; margin-bottom: 4px; }
+  .calendar-cell { padding: 6px 0; font-size: 14px; color: #3B3D41; cursor: pointer; border-radius: 6px; transition: 0.2s; user-select: none; }
+  .calendar-cell:hover { background: #F0F0F0; color: #B20000; font-weight: 700; }
+  .calendar-cell.empty { visibility: hidden; pointer-events: none; }
+  .calendar-cell.today { background-color: #B20000; color: #FFFFFF; font-weight: 700; }
+  .calendar-cell.today:hover { background-color: #8E0000; color: #FFFFFF; }
+
+
   .cancel-card-preview {
     background: #f6e4e6;
     border: 1px solid #d7bcbc;
@@ -478,8 +523,13 @@ const styles = `
 `;
 
 export default function MinhasReservas() {
+  const navigate = useNavigate();
   const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [salasDisponiveis, setSalasDisponiveis] = useState<SalaDisponivel[]>([]);
   const [filtro, setFiltro] = useState<"todas" | StatusReserva>("todas");
+
+  // Estado para controlar as mensagens (Toasts)
+  const [mensagem, setMensagem] = useState<{ tipo: 'sucesso' | 'erro', texto: string } | null>(null);
 
   const [modalMotivoAberto, setModalMotivoAberto] = useState(false);
   const [modalCancelarAberto, setModalCancelarAberto] = useState(false);
@@ -487,34 +537,40 @@ export default function MinhasReservas() {
 
   const [reservaSelecionada, setReservaSelecionada] = useState<Reserva | null>(null);
 
+  const [novaSala, setNovaSala] = useState("");
   const [novaData, setNovaData] = useState("");
+  const [novaDataIso, setNovaDataIso] = useState("");
   const [novoHorario, setNovoHorario] = useState("");
   const [motivoAlteracao, setMotivoAlteracao] = useState("");
-  const [novaSala, setNovaSala] = useState("");
+
+  const [calendarioAberto, setCalendarioAberto] = useState(false);
+  const [dataVisualizacao, setDataVisualizacao] = useState(new Date());
+  const calendarioRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchReservas = async () => {
       try {
-        const response = await api.get('/agendamentos') as { data: unknown[] };
+        const response = await api.get('/agendamentos') as { data: { data: any[] } };
+        const listaReservas = Array.isArray(response.data) ? response.data : response.data.data;
 
-        const reservasFormatadas = response.data.map((item: any) => {
+        const reservasFormatadas = listaReservas.map((item: any) => {
           let statusFormatado: StatusReserva = "pendente";
-          if (item.status === "APROVADO" || item.status === "Aprovada") statusFormatado = "aprovado";
-          else if (item.status === "REJEITADO" || item.status === "Rejeitada") statusFormatado = "rejeitado";
+          if (item.statusAgendamento === "AGENDADO") statusFormatado = "aprovado";
+          else if (item.statusAgendamento === "CANCELADO" || item.statusAgendamento === "REJEITADO") statusFormatado = "rejeitado";
 
-          let dataFormatada = item.dataReserva;
-          if (item.dataReserva && item.dataReserva.includes('-')) {
-            const dataObj = new Date(item.dataReserva);
+          let dataFormatada = item.dataAgendamento;
+          if (item.dataAgendamento) {
+            const dataObj = new Date(item.dataAgendamento);
             dataFormatada = dataObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
           }
 
           return {
-            id: item.idAgendamento || item.id,
-            sala: item.sala?.nomeSala || item.nomeSala || `Sala ${item.salaId}`,
+            id: item.idAgendamento,
+            sala: item.salaNome || `Sala ${item.salaId}`,
             data: dataFormatada || "Data não informada",
-            horario: item.horarioInicio && item.horarioFim ? `${item.horarioInicio} às ${item.horarioFim}` : item.horario || "Horário não informado",
+            horario: item.horaInicio && item.horaFim ? `${item.horaInicio} às ${item.horaFim}` : "Horário não informado",
             status: statusFormatado,
-            motivo: item.motivoReserva || item.motivo || "Nenhum motivo informado",
+            motivo: item.descricao || "Nenhum motivo informado",
           };
         });
 
@@ -523,8 +579,37 @@ export default function MinhasReservas() {
         console.error("Erro ao buscar reservas:", error);
       }
     };
-
     fetchReservas();
+  }, []);
+
+  useEffect(() => {
+    const fetchSalas = async () => {
+      try {
+        const response = await api.get('/inventarios');
+        const data = Array.isArray((response as any).data) ? (response as any).data : (response as any).data?.data || [];
+        
+        const salasLidas = data.map((item: any) => ({
+          id: item.salaId,
+          nome: item.salaNome || item.sala?.nomeSala || `Sala ${item.salaId}`
+        }));
+
+        const uniqueSalas = salasLidas.filter((v: any, i: number, a: any) => a.findIndex((t: any) => (t.id === v.id)) === i);
+        setSalasDisponiveis(uniqueSalas);
+      } catch (error) {
+        console.error("Erro ao buscar salas:", error);
+      }
+    };
+    fetchSalas();
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (calendarioRef.current && !calendarioRef.current.contains(event.target as Node)) {
+        setCalendarioAberto(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const reservasFiltradas = useMemo(() => {
@@ -545,8 +630,32 @@ export default function MinhasReservas() {
   const abrirModalAlteracao = (reserva: Reserva) => {
     setReservaSelecionada(reserva);
     setNovaSala(reserva.sala);
-    setNovaData(reserva.data);
-    setNovoHorario(reserva.horario);
+
+    if (reserva.data && reserva.data.includes('/')) {
+      const [dia, mes, ano] = reserva.data.split('/');
+      if (dia && mes && ano) {
+        setNovaDataIso(`${ano}-${mes}-${dia}`);
+        
+        const d = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+        const diasExtenso = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const nomeSemana = diasExtenso[d.getDay()];
+        setNovaData(`${dia}/${mes}/${ano} (${nomeSemana})`);
+      } else {
+        setNovaData(reserva.data);
+        setNovaDataIso("");
+      }
+    } else {
+      setNovaData(reserva.data || "");
+      setNovaDataIso("");
+    }
+
+    if (reserva.horario && reserva.horario.includes(' às ')) {
+      setNovoHorario(reserva.horario.replace(' às ', ' as '));
+    } else {
+      setNovoHorario(reserva.horario);
+    }
+    
+    setMotivoAlteracao("");
     setModalAlteracaoAberto(true);
   };
 
@@ -554,34 +663,80 @@ export default function MinhasReservas() {
     setModalMotivoAberto(false);
     setModalCancelarAberto(false);
     setModalAlteracaoAberto(false);
+    setCalendarioAberto(false);
     setReservaSelecionada(null);
+  };
+
+  // HANDLERS DO CALENDÁRIO
+  const mudarMes = (delta: number) => {
+    setDataVisualizacao(new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth() + delta, 1));
+  };
+
+  const selecionarData = (dia: number) => {
+    const d = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth(), dia);
+    const diaStr = String(dia).padStart(2, '0');
+    const mesStr = String(dataVisualizacao.getMonth() + 1).padStart(2, '0');
+    const anoStr = dataVisualizacao.getFullYear();
+    const diasExtenso = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const nomeSemana = diasExtenso[d.getDay()];
+
+    setNovaData(`${diaStr}/${mesStr}/${anoStr} (${nomeSemana})`);
+    setNovaDataIso(`${anoStr}-${mesStr}-${diaStr}`);
+    setCalendarioAberto(false);
   };
 
   // FUNÇÃO PARA CANCELAR RESERVA
   const confirmarCancelamento = async () => {
     if (!reservaSelecionada) return;
     try {
-      await api.delete(`/agendamentos/${reservaSelecionada.id}`);
+      await api.put(`/agendamentos/${reservaSelecionada.id}`, {
+        descricao: "Reserva cancelada pelo docente."
+      });
+
+      await api.post(`/agendamentos/${reservaSelecionada.id}/cancelar`);
       
-      setReservas(prev => prev.filter(r => r.id !== reservaSelecionada.id));
-      alert("Reserva cancelada com sucesso.");
+      setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? { 
+        ...r, 
+        status: "rejeitado", 
+        motivo: "Reserva cancelada pelo docente." 
+      } : r));
+      
+      setMensagem({ tipo: 'sucesso', texto: 'Reserva cancelada com sucesso.' });
+      setTimeout(() => setMensagem(null), 4000);
       fecharTudo();
     } catch (error) {
       console.error("Erro ao cancelar reserva:", error);
-      alert("Erro ao cancelar reserva. Verifique sua conexão com o servidor.");
+      setMensagem({ tipo: 'erro', texto: 'Erro ao cancelar reserva. Verifique sua conexão com o servidor.' });
+      setTimeout(() => setMensagem(null), 4000);
     }
   };
 
-  // FUNÇÃO PARA ALTERAR RESERVA
+// FUNÇÃO PARA ALTERAR RESERVA
   const confirmarAlteracao = async () => {
     if (!reservaSelecionada) return;
 
     try {
+      let horaInicio, horaFim, dataAgendamentoIso;
+
+      if (novoHorario.includes(" as ")) {
+        const parts = novoHorario.split(" as ");
+        horaInicio = parts[0].trim();
+        horaFim = parts[1].trim();
+      }
+
+      if (novaDataIso) {
+         dataAgendamentoIso = new Date(`${novaDataIso}T00:00:00Z`).toISOString();
+      }
+
+      const salaSelecionadaObj = salasDisponiveis.find(s => s.nome === novaSala);
+
       const payload = {
-        salaNome: novaSala,
-        dataReserva: novaData,
-        horario: novoHorario,
-        motivo: motivoAlteracao
+        ...(dataAgendamentoIso && { dataAgendamento: dataAgendamentoIso }),
+        ...(horaInicio && { horaInicio }),
+        ...(horaFim && { horaFim }),
+        descricao: motivoAlteracao ? `[ALTERAÇÃO] ${motivoAlteracao}` : "[ALTERAÇÃO] Solicitação de mudança de data/horário.",
+        ...(salaSelecionadaObj && { salaId: salaSelecionadaObj.id }),
+        statusAgendamento: "EM_ESPERA" 
       };
 
       await api.put(`/agendamentos/${reservaSelecionada.id}`, payload);
@@ -589,17 +744,20 @@ export default function MinhasReservas() {
       setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? {
         ...r, 
         sala: novaSala,
-        data: novaData,
-        horario: novoHorario,
-        status: "pendente"
+        data: novaData.split(' ')[0] || r.data, 
+        horario: novoHorario.replace(' as ', ' às ') || r.horario, 
+        status: "pendente" 
       } : r));
 
-      alert("Solicitação de alteração enviada com sucesso.");
+      setMensagem({ tipo: 'sucesso', texto: 'Solicitação de alteração enviada com sucesso.' });
+      setTimeout(() => setMensagem(null), 4000);
+      
       setMotivoAlteracao("");
       fecharTudo();
     } catch (error) {
       console.error("Erro ao alterar reserva:", error);
-      alert("Erro ao solicitar alteração.");
+      setMensagem({ tipo: 'erro', texto: 'Erro ao solicitar alteração. Verifique se preencheu Data e Horário corretamente.' });
+      setTimeout(() => setMensagem(null), 4000);
     }
   };
 
@@ -615,11 +773,27 @@ export default function MinhasReservas() {
     return "Rejeitada";
   };
 
+  // Variáveis para o Calendário
+  const diasDoMes = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth() + 1, 0).getDate();
+  const primeiroDiaDaSemana = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth(), 1).getDay();
+  const diasArr = Array.from({length: diasDoMes}, (_, i) => i + 1);
+  const espacosArr = Array.from({length: primeiroDiaDaSemana}, (_, i) => i);
+  const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const diasSemanaNomes = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
   return (
     <>
       <style>{styles}</style>
 
       <div className="minhas-reservas-page">
+
+        {/* Exibição da notificação (Toast) */}
+        {mensagem && (
+          <div className={`toast-mensagem ${mensagem.tipo}`}>
+            {mensagem.texto}
+          </div>
+        )}
+
         <header className="header-salas">
           <div className="header-content">
             <img
@@ -637,7 +811,9 @@ export default function MinhasReservas() {
         </header>
 
         <div className="top-actions">
-          <button className="btn-reservar">+ Reservar sala</button>
+        <button className="btn-reservar" onClick={() => navigate('/listar-salas-docentes')}>
+          + Reservar sala
+        </button>
 
           <div className="filters-bar">
             <span className="filter-label">Status:</span>
@@ -736,6 +912,7 @@ export default function MinhasReservas() {
           )}
         </div>
 
+        {/* MODAL SOLICITAR ALTERAÇÃO */}
         {modalAlteracaoAberto && reservaSelecionada && (
           <div className="modal-overlay" onClick={fecharTudo}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -755,31 +932,80 @@ export default function MinhasReservas() {
                     value={novaSala}
                     onChange={(e) => setNovaSala(e.target.value)}
                   >
-                    <option value="Sala 26">Sala 26</option>
-                    <option value="Sala 27">Sala 27</option>
-                    <option value="Sala 28">Sala 28</option>
-                    <option value="Sala 29">Sala 29</option>
-                    <option value="Sala 30">Sala 30</option>
+                    {salasDisponiveis.map(sala => (
+                      <option key={sala.id} value={sala.nome}>{sala.nome}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="row-2">
-                  <div>
+                  <div ref={calendarioRef} style={{ position: 'relative' }}>
                     <div className="modal-label">Alterar data:</div>
-                    <input
-                      className="input"
-                      value={novaData}
-                      onChange={(e) => setNovaData(e.target.value)}
-                    />
+                    <div className="input-with-icon" onClick={() => setCalendarioAberto(!calendarioAberto)} style={{ cursor: 'pointer' }}>
+                      <img src={iconData} alt="Data" className="input-icon" />
+                      <input 
+                        type="text" 
+                        className="input"
+                        style={{ paddingLeft: '40px', cursor: 'pointer' }}
+                        placeholder="Selecione a data" 
+                        value={novaData} 
+                        readOnly 
+                      />
+                      
+                      {calendarioAberto && (
+                        <div className="custom-calendar" onClick={e => e.stopPropagation()}>
+                          <div className="calendar-header">
+                            <span className="calendar-nav" onClick={() => mudarMes(-1)}>&lt;</span>
+                            <span>{mesesNomes[dataVisualizacao.getMonth()]} {dataVisualizacao.getFullYear()}</span>
+                            <span className="calendar-nav" onClick={() => mudarMes(1)}>&gt;</span>
+                          </div>
+                          <div className="calendar-grid">
+                            {diasSemanaNomes.map((dia, idx) => (
+                              <div key={idx} className="calendar-day-name">{dia}</div>
+                            ))}
+                            {espacosArr.map((_, idx) => (
+                              <div key={`espaco-${idx}`} className="calendar-cell empty"></div>
+                            ))}
+                            {diasArr.map(dia => {
+                              const hoje = new Date();
+                              const isToday = dia === hoje.getDate() && 
+                                              dataVisualizacao.getMonth() === hoje.getMonth() && 
+                                              dataVisualizacao.getFullYear() === hoje.getFullYear();
+                              
+                              return (
+                                <div 
+                                  key={dia} 
+                                  className={`calendar-cell ${isToday ? 'today' : ''}`}
+                                  onClick={() => selecionarData(dia)}
+                                >
+                                  {dia}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <div className="modal-label">Alterar horário:</div>
-                    <input
-                      className="input"
-                      value={novoHorario}
-                      onChange={(e) => setNovoHorario(e.target.value)}
-                    />
+                    <div className="input-with-icon">
+                      <img src={iconHorario} alt="Horário" className="input-icon" />
+                      <select 
+                        className="input"
+                        style={{ paddingLeft: '40px', appearance: 'none', backgroundImage: 'url(' + iconSeta + ')', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', cursor: 'pointer' }}
+                        value={novoHorario} 
+                        onChange={e => setNovoHorario(e.target.value)}
+                      >
+                        <option value="" disabled hidden>Selecione um horário</option>
+                        <option value="07:30 as 09:10">07:30 às 09:10</option>
+                        <option value="09:20 as 11:00">09:20 às 11:00</option>
+                        <option value="11:10 as 13:00">11:10 às 13:00</option>
+                        <option value="14:50 as 16:30">14:50 às 16:30</option>
+                        <option value="16:40 as 18:20">16:40 às 18:20</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -805,6 +1031,7 @@ export default function MinhasReservas() {
           </div>
         )}
 
+        {/* MODAL CANCELAR RESERVA */}
         {modalCancelarAberto && reservaSelecionada && (
           <div className="modal-overlay" onClick={fecharTudo}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -854,6 +1081,7 @@ export default function MinhasReservas() {
           </div>
         )}
 
+        {/* MODAL VISUALIZAR MOTIVO */}
         {modalMotivoAberto && reservaSelecionada && (
           <div className="modal-overlay" onClick={fecharTudo}>
             <div
@@ -865,7 +1093,7 @@ export default function MinhasReservas() {
               </button>
 
               <div className="modal-header-line">
-                <h2 className="modal-title">Motivo da rejeição</h2>
+                <h2 className="modal-title">Motivo da rejeição / cancelamento</h2>
               </div>
 
               <div className="modal-body">
