@@ -12,7 +12,7 @@ import MinhasReservas from "./pages/docentes/reservaDocente";
 import DashboardAdm from "./pages/adm/dashboardAdm";
 import LayoutBase from "./components/LayoutBase";
 import CriarUsuario from "./pages/adm/criarUsuarios";
-import Calendario from "./pages/docentes/Calendario";
+import Calendario from "./pages/adm/Calendario";
 
 
 function AppRoutes() {
