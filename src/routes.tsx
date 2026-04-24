@@ -12,6 +12,7 @@ import MinhasReservas from "./pages/docentes/reservaDocente";
 import DashboardAdm from "./pages/adm/dashboardAdm";
 import LayoutBase from "./components/LayoutBase";
 import CriarUsuario from "./pages/adm/criarUsuarios";
+import Calendario from "./pages/adm/Calendario";
 import ReservasSolicitadas from "./pages/adm/ReservasSolicitadas";
 
 
@@ -28,6 +29,7 @@ function AppRoutes() {
                     <Route path="/minhas-reservas" element={<MinhasReservas />}/>
                     <Route path="/dashboard-adm" element={<DashboardAdm />}/>
                     <Route path="/criar-usuario" element={<CriarUsuario />}/>
+                    <Route path="/calendario" element={<Calendario />} />
                     <Route path="/reservas-solicitadas" element={<ReservasSolicitadas />}/>
                 </Route>
             </Routes>
