@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { api } from '../../services/api';
+import { jwtDecode } from 'jwt-decode';
 
 import iconSala from '../../assets/sala.svg';
 import iconPesquisa from '../../assets/pesquisa.svg';
@@ -8,54 +10,22 @@ import iconX from '../../assets/x.svg';
 import iconData from '../../assets/data.svg';
 import iconHorario from '../../assets/horario.svg';
 import imgSala from '../../assets/sala.png';
-import imgSala2 from '../../assets/sala2.png';
-import imgSala3 from '../../assets/sala3.png';
-import imgSala4 from '../../assets/sala4.png';
-import imgSala5 from '../../assets/sala5.png';
-import imgSala6 from '../../assets/sala6.png';
-import imgSala7 from '../../assets/sala7.png';
-import imgSala8 from '../../assets/sala8.png';
-import imgSala9 from '../../assets/sala9.png';
 
-const mockSalas = [
-  {
-    id: 1,
-    nome: 'Sala 30',
-    capacidade: 30,
-    maquinas: [
-      { nome: 'Desktops', qtd: 30 },
-      { nome: 'Projetor', qtd: 1 },
-      { nome: 'Televisão', qtd: 1 }
-    ],
-    tecnologias: ['Excel', 'MySQL', 'Node', 'Java', 'Python', 'Photoshop', 'Word', 'Visual Studio Code', 'Git'],
-    imagem: imgSala,
-    fotos: [imgSala, imgSala4, imgSala5]
-  },
-  {
-    id: 2,
-    nome: 'Sala 31',
-    capacidade: 40,
-    maquinas: [
-      { nome: 'Desktops', qtd: 40 },
-      { nome: 'Projetor', qtd: 1 }
-    ],
-    tecnologias: ['Excel', 'Word', 'PowerPoint'],
-    imagem: imgSala2,
-    fotos: [imgSala2, imgSala6, imgSala7]
-  },
-  {
-    id: 3,
-    nome: 'Sala 32',
-    capacidade: 20,
-    maquinas: [
-      { nome: 'Notebooks', qtd: 20 },
-      { nome: 'Televisão', qtd: 2 }
-    ],
-    tecnologias: ['Android Studio', 'Java', 'Git'],
-    imagem: imgSala3,
-    fotos: [imgSala3, imgSala8, imgSala9]
-  }
-];
+type Maquina = {
+  nome: string;
+  qtd: number;
+};
+
+type Sala = {
+  id: number;
+  idInventario: number;
+  nome: string;
+  capacidade: number;
+  maquinas: Maquina[];
+  tecnologias: string[];
+  imagem: string;
+  fotos: string[];
+};
 
 const styles = `
   .lista-salas-container {
@@ -213,6 +183,7 @@ const styles = `
 `;
 
 export default function ListaSalasDocentes() {
+  const [salas, setSalas] = useState<Sala[]>([]);
   const [busca, setBusca] = useState('');
   
   const [ordenacao, setOrdenacao] = useState('');
@@ -227,15 +198,58 @@ export default function ListaSalasDocentes() {
   const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
   const [modalReservaAberto, setModalReservaAberto] = useState(false);
   const [salaSelecionada, setSalaSelecionada] = useState<any>(null);
-  const [fotoAtual, setFotoAtual] = useState<string>(''); // Novo estado para galeria
+  const [fotoAtual, setFotoAtual] = useState<string>(''); 
 
   const [dataReserva, setDataReserva] = useState('');
+  const [dataReservaIso, setDataReservaIso] = useState('');
   const [horarioReserva, setHorarioReserva] = useState('');
   const [motivoReserva, setMotivoReserva] = useState('');
   const [mensagem, setMensagem] = useState<{ tipo: 'sucesso' | 'erro', texto: string } | null>(null);
 
   const [calendarioAberto, setCalendarioAberto] = useState(false);
   const [dataVisualizacao, setDataVisualizacao] = useState(new Date());
+
+  useEffect(() => {
+    const fetchSalas = async () => {
+      try {
+        const response = await api.get<any>('/inventarios');
+
+        let arrayDeSalas = [];
+        if (Array.isArray(response.data)) { arrayDeSalas = response.data; } 
+        else if (response.data && Array.isArray(response.data.data)) { arrayDeSalas = response.data.data; }
+
+        const salasFormatadas = arrayDeSalas.map((item: any) => {
+          let arrayFotos: string[] = [];
+          const fotoBD = item.fotoSala || item.sala?.fotoSala;
+          if (fotoBD) { arrayFotos = fotoBD.split(','); }
+
+          return {
+            id: item.salaId, 
+            idInventario: item.idInventario, 
+            nome: item.salaNome || item.sala?.nomeSala || 'Sala Sem Nome',
+            capacidade: item.capacidadeAlunos || item.sala?.capacidadeAlunos || 0,
+            
+            maquinas: Array.isArray(item.dispositivos) ? item.dispositivos.map((d: any) => ({
+              nome: d.nomeDispositivo || d.dispositivo?.nomeDispositivo || 'Dispositivo',
+              qtd: d.quantidade || 1
+            })) : [],
+
+            tecnologias: Array.isArray(item.tecnologias) ? item.tecnologias.map((t: any) => (
+              t.nomeTecnologia || t.tecnologia?.nomeTecnologia || 'Tecnologia'
+            )) : [],
+            
+            imagem: arrayFotos.length > 0 ? arrayFotos[0] : imgSala,
+            fotos: arrayFotos.length > 0 ? arrayFotos : [imgSala]
+          };
+        });
+
+        setSalas(salasFormatadas);
+      } catch (error) {
+        console.error("Erro ao buscar salas do banco:", error);
+      }
+    };
+    fetchSalas();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -249,9 +263,9 @@ export default function ListaSalasDocentes() {
 
   const todasMaquinas = useMemo(() => {
     const maquinas = new Set<string>();
-    mockSalas.forEach(sala => sala.maquinas.forEach(m => maquinas.add(m.nome)));
+    salas.forEach(sala => sala.maquinas.forEach(m => maquinas.add(m.nome)));
     return Array.from(maquinas);
-  }, []);
+  }, [salas]);
 
   const toggleMaquina = (nomeMaquina: string) => {
     setMaquinasSelecionadas(prev => 
@@ -266,22 +280,22 @@ export default function ListaSalasDocentes() {
   };
 
   const salasFiltradas = useMemo(() => {
-    let resultado = [...mockSalas];
+    let resultado = [...salas];
     if (busca.trim() !== '') {
-      resultado = resultado.filter(sala => 
+      resultado = resultado.filter(sala =>
         sala.nome.toLowerCase().includes(busca.toLowerCase()) ||
         sala.tecnologias.some(tec => tec.toLowerCase().includes(busca.toLowerCase()))
       );
     }
     if (maquinasSelecionadas.length > 0) {
-      resultado = resultado.filter(sala => 
+      resultado = resultado.filter(sala =>
         sala.maquinas.some(maq => maquinasSelecionadas.includes(maq.nome))
       );
     }
     if (ordenacao === 'capacidade-maior') resultado.sort((a, b) => b.capacidade - a.capacidade);
     else if (ordenacao === 'capacidade-menor') resultado.sort((a, b) => a.capacidade - b.capacidade);
     return resultado;
-  }, [busca, maquinasSelecionadas, ordenacao]);
+  }, [busca, maquinasSelecionadas, ordenacao, salas]);
 
   const abrirDetalhes = (sala: any) => { 
     setSalaSelecionada(sala); 
@@ -303,14 +317,55 @@ export default function ListaSalasDocentes() {
     setCalendarioAberto(false);
   };
 
-  const confirmarReserva = () => {
-    const sucesso = Math.random() > 0.3; 
-    if (sucesso) {
-      setMensagem({ tipo: 'sucesso', texto: 'Sala reservada com sucesso!' });
+  const selecionarData = (dia: number) => {
+    const d = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth(), dia);
+    const diaStr = String(dia).padStart(2, '0');
+    const mesStr = String(dataVisualizacao.getMonth() + 1).padStart(2, '0');
+    const anoStr = dataVisualizacao.getFullYear();
+    const diasExtenso = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const nomeSemana = diasExtenso[d.getDay()];
+
+    setDataReserva(`${diaStr}/${mesStr}/${anoStr} (${nomeSemana})`);
+    setDataReservaIso(`${anoStr}-${mesStr}-${diaStr}`);
+    setCalendarioAberto(false);
+  };
+
+  const confirmarReserva = async () => {
+    if (!salaSelecionada || !dataReservaIso || !horarioReserva) {
+      setMensagem({ tipo: 'erro', texto: 'Por favor, selecione uma data e um horário.' });
+      setTimeout(() => setMensagem(null), 4000);
+      return;
+    }
+
+    let usuarioIdLogado = null;
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode<{ sub: number }>(token);
+        usuarioIdLogado = decoded.sub;
+      } catch (e) {
+        console.error("Erro ao ler o token JWT:", e);
+      }
+    }
+
+    const [horaInicio, horaFim] = horarioReserva.split(' as ');
+
+    try {
+      await api.post('/agendamentos/solicitar-reserva', {
+        salaId: salaSelecionada.id,
+        usuarioId: usuarioIdLogado,
+        dataAgendamento: new Date(`${dataReservaIso}T00:00:00Z`).toISOString(),
+        horaInicio: horaInicio.trim(),
+        horaFim: horaFim.trim(),
+        descricao: motivoReserva
+      });
+
+      setMensagem({ tipo: 'sucesso', texto: 'Solicitação de reserva enviada com sucesso!' });
       fecharModais();
-      setDataReserva(''); setHorarioReserva(''); setMotivoReserva('');
-    } else {
-      setMensagem({ tipo: 'erro', texto: 'Erro ao reservar sala. Verifique a disponibilidade e tente novamente.' });
+      setDataReserva(''); setHorarioReserva(''); setMotivoReserva(''); setDataReservaIso('');
+    } catch (error: any) {
+      console.error(error);
+      setMensagem({ tipo: 'erro', texto: error.response?.data?.message || 'Erro ao solicitar reserva. Verifique a disponibilidade da sala.' });
     }
     setTimeout(() => setMensagem(null), 4000);
   };
@@ -324,18 +379,6 @@ export default function ListaSalasDocentes() {
 
   const mudarMes = (delta: number) => {
     setDataVisualizacao(new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth() + delta, 1));
-  };
-
-  const selecionarData = (dia: number) => {
-    const d = new Date(dataVisualizacao.getFullYear(), dataVisualizacao.getMonth(), dia);
-    const diaStr = String(dia).padStart(2, '0');
-    const mesStr = String(dataVisualizacao.getMonth() + 1).padStart(2, '0');
-    const anoStr = dataVisualizacao.getFullYear();
-    const diasExtenso = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-    const nomeSemana = diasExtenso[d.getDay()];
-
-    setDataReserva(`${diaStr}/${mesStr}/${anoStr} (${nomeSemana})`);
-    setCalendarioAberto(false);
   };
 
   return (
@@ -425,15 +468,15 @@ export default function ListaSalasDocentes() {
                   <div className="info-section">
                     <span className="info-label">Máquinas:</span>
                     <div className="pills-container">
-                      {sala.maquinas.map((maq, index) => (
-                        <span key={index} className="pill-red">{maq.nome}</span>
-                      ))}
-                    </div>
+                        {sala.maquinas.map((maq: any, index: number) => (
+                          <span key={index} className="pill-red">{maq.nome}</span>
+                        ))}
+                      </div>
                   </div>
                   <div className="info-section">
                     <span className="info-label">Tecnologias:</span>
                     <div className="pills-container">
-                      {sala.tecnologias.slice(0, 3).map((tec, index) => (
+                      {sala.tecnologias.slice(0, 3).map((tec: string, index: number) => (
                         <span key={index} className="pill-red">{tec}</span>
                       ))}
                       {sala.tecnologias.length > 3 && (
@@ -522,7 +565,7 @@ export default function ListaSalasDocentes() {
                   <label>Qual sala deseja reservar?</label>
                   <div className="input-with-icon">
                     <select defaultValue={salaSelecionada.nome}>
-                      {mockSalas.map(s => <option key={s.id} value={s.nome}>{s.nome}</option>)}
+                      {salas.map(s => <option key={s.id} value={s.nome}>{s.nome}</option>)}
                     </select>
                   </div>
                 </div>

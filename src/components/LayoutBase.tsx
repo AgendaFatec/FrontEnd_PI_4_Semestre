@@ -15,6 +15,7 @@ export default function LayoutBase() {
   useEffect(() => {
     const token = localStorage.getItem('token'); 
     
+    
     if (token) {
       try {
         const decoded = jwtDecode<{ sub:number, role: string, email: string, name?: string, userName?: string }>(token);
@@ -36,6 +37,7 @@ export default function LayoutBase() {
       } catch (error) {
         console.error("Erro ao decodificar token no Layout:", error);
       }
+      
     }
   }, []);
 
