@@ -19,6 +19,9 @@ export class ApiService{
             withCredentials:true,
             timeout: 10000
         });
+
+        this.memeoryToken = localStorage.getItem('token');
+
         this.initializeInterceptors()
     }
     public static getInstance():ApiService{
@@ -77,6 +80,7 @@ export class ApiService{
     }
     public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
         const res = await this.api.get<T>(url, config);
+        // console.log(`\n\nresposta: ${res}\n`)
         return res.data;
     }
 

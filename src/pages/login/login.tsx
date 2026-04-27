@@ -43,12 +43,14 @@ const Login = () => {
         try {
             const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
             window.location.href = `${backendUrl}/Auth/login`;
+            console.log(backendUrl)
         } catch (error) {
             console.log('Erro ao iniciar login institucional:', error);
         }
     };
 
     const handleEnterRoom = () => {
+        console.log(userRole)
         if (userRole === 'TI') {
             navigate('/listar-salas-tecnico', { replace: true });
         } else if (userRole === 'ADM') {

@@ -59,8 +59,13 @@ export default function Sidebar({ tipoUsuario, nomeUsuario, usuarioEmail, userId
         const response:any = await api.get(`/Usuarios/foto/${userId}`, {
           responseType: 'blob', 
         });
+        console.log(response)
+        console.log(typeof(response))
+        console.log("mime recebido:", response.type)
 
-        if (response instanceof Blob) {
+
+        // if (response instanceof Blob ) {
+        if (response instanceof Blob && response.type.startsWith('image/')) {
           const urlGerada = URL.createObjectURL(response);
           setFotoUrl(urlGerada);   
         } else {
