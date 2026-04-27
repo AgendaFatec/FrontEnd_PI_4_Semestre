@@ -54,7 +54,7 @@ const Login = () => {
         if (userRole === 'TI') {
             navigate('/listar-salas-tecnico', { replace: true });
         } else if (userRole === 'ADM') {
-            navigate('/dashboard-adm', { replace: true }); 
+            navigate('/reservas-solicitadas', { replace: true }); 
         } else if (userRole === 'DOCENTE') {
             navigate('/listar-salas-docentes', { replace: true });
         } else {

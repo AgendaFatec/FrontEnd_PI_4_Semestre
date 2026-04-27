@@ -22,7 +22,7 @@ const menusPorUsuario = {
   ],
   coordenador: [
     { nome: 'Reservas Solicitadas', path: '/reservas-solicitadas', icone: reservaSvg },
-    { nome: 'Calendário de reservas', path: '/calendario-geral', icone: dataSvg },
+    { nome: 'Calendário de reservas', path: '/Calendario', icone: dataSvg },
     { nome: 'Criação de Usuário', path: '/criar-usuario', icone: criacaoSvg },
     { nome: 'Frequência de Salas', path: '/frequencia', icone: salaSvg },
   ],
