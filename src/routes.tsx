@@ -14,7 +14,7 @@ import LayoutBase from "./components/LayoutBase";
 import CriarUsuario from "./pages/adm/criarUsuarios";
 import Calendario from "./pages/adm/Calendario";
 import ReservasSolicitadas from "./pages/adm/ReservasSolicitadas";
-
+import TelaDispositivos from "./pages/tecnico/ListarDispositivos"; // Verifique o caminho real do arquivo
 
 function AppRoutes() {
     return (
@@ -26,6 +26,9 @@ function AppRoutes() {
                 <Route element={<LayoutBase />}>
                     <Route path="/listar-salas-docentes" element={<ListaSalasDocentes />}/>
                     <Route path="/listar-salas-tecnico" element={<ListaSalasTecnico />}/>
+                    <Route path="/dispositivos" element={<TelaDispositivos />}/> 
+
+                    
                     <Route path="/minhas-reservas" element={<MinhasReservas />}/>
                     <Route path="/dashboard-adm" element={<DashboardAdm />}/>
                     <Route path="/criar-usuario" element={<CriarUsuario />}/>

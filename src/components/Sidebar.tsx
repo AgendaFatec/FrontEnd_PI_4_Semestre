@@ -26,9 +26,15 @@ const menusPorUsuario = {
     { nome: 'Criação de Usuário', path: '/criar-usuario', icone: criacaoSvg },
     { nome: 'Frequência de Salas', path: '/frequencia', icone: salaSvg },
   ],
-  tecnico: [
+  // tecnico: [
+  //   { nome: 'Salas', path: '/listar-salas-tecnico', icone: salaSvg },
+  //   { nome: 'Chamados T.I.', path: '/chamados-ti', icone: chamadosTiSvg },
+  //   { nome: 'Dispositivos', path: '/dispositivos', icone: criacaoSvg }, 
+  // ]
+  TI: [ // <--- Mude de 'tecnico' para 'TI'
     { nome: 'Salas', path: '/listar-salas-tecnico', icone: salaSvg },
     { nome: 'Chamados T.I.', path: '/chamados-ti', icone: chamadosTiSvg },
+    { nome: 'Dispositivos', path: '/dispositivos', icone: criacaoSvg }, 
   ]
 };
 
@@ -44,7 +50,10 @@ interface SidebarProps {
 export default function Sidebar({ tipoUsuario, nomeUsuario, usuarioEmail, userId,onFechar, isOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const menuAtual = menusPorUsuario[tipoUsuario];
+  // const menuAtual = menusPorUsuario[tipoUsuario];
+  
+  const roleNormalizada = (tipoUsuario === 'tecnico' as any) ? 'TI' : tipoUsuario;
+  const menuAtual = menusPorUsuario[roleNormalizada as keyof typeof menusPorUsuario] || [];
 
 
   // const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
